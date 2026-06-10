@@ -3,6 +3,8 @@ import { Baby, Plus, MessageSquare, Wifi, WifiOff, GraduationCap, ArrowRight, Cl
 import { NewsWidget } from "@/components/news/NewsWidget";
 import { requireRole } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
+import { isDemoId, DEMO_PARENT_CHILDREN, DEMO_PARENT_NOTES, DEMO_PARENT_ATTENDANCE } from "@/lib/demo-data";
+import type { DemoChildRow } from "@/lib/demo-data";
 import { DashboardShell } from "@/components/DashboardShell";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -39,37 +41,37 @@ function isOnline(lastSeen: string | null) {
 
 export default async function ParentDashboard() {
   const profile = await requireRole("parent");
+  const demo = isDemoId(profile.id);
 
   let children: ChildRow[] = [];
   let recentNotes: NoteRow[] = [];
   let weekAttendance: AttRow[] = [];
 
-  try {
-    const supabase = await createClient();
-    const { data: childrenRaw } = await supabase.rpc("get_my_children");
-    children = (childrenRaw as ChildRow[]) ?? [];
-    const childIds = children.map((c) => c.student_id);
+  if (demo) {
+    children = DEMO_PARENT_CHILDREN as unknown as ChildRow[];
+    recentNotes = DEMO_PARENT_NOTES.map((n) => ({
+      id: n.id, note: n.note, created_at: n.created_at, student_id: n.student_id,
+    }));
+    weekAttendance = DEMO_PARENT_ATTENDANCE as AttRow[];
+  } else {
+    try {
+      const supabase = await createClient();
+      const { data: childrenRaw } = await supabase.rpc("get_my_children");
+      children = (childrenRaw as ChildRow[]) ?? [];
+      const childIds = children.map((c) => c.student_id);
 
-    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-    if (childIds.length > 0) {
-      const [notesRes, attRes] = await Promise.all([
-        supabase
-          .from("teacher_notes")
-          .select("id, note, created_at, student_id")
-          .in("student_id", childIds)
-          .order("created_at", { ascending: false })
-          .limit(5),
-        supabase
-          .from("attendance")
-          .select("student_id, date, status")
-          .in("student_id", childIds)
-          .gte("date", weekAgo),
-      ]);
-      recentNotes = (notesRes.data as NoteRow[]) ?? [];
-      weekAttendance = (attRes.data as AttRow[]) ?? [];
-    }
-  } catch { /* bỏ qua lỗi khi chưa cấu hình Supabase */ }
+      if (childIds.length > 0) {
+        const [notesRes, attRes] = await Promise.all([
+          supabase.from("teacher_notes").select("id, note, created_at, student_id").in("student_id", childIds).order("created_at", { ascending: false }).limit(5),
+          supabase.from("attendance").select("student_id, date, status").in("student_id", childIds).gte("date", weekAgo),
+        ]);
+        recentNotes = (notesRes.data as NoteRow[]) ?? [];
+        weekAttendance = (attRes.data as AttRow[]) ?? [];
+      }
+    } catch { /* bỏ qua lỗi khi chưa cấu hình Supabase */ }
+  }
 
   const newNotesCount = recentNotes.filter(
     (n) => Date.now() - new Date(n.created_at).getTime() < 2 * 24 * 60 * 60 * 1000,

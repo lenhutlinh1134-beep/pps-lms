@@ -122,6 +122,78 @@ export const DEMO_NOTES: Record<string, DemoNote[]> = {
 
 export const DEMO_TEACHER_STATS = { classes: 2, students: 13, online: 4, flags: 2 };
 
+// ─── Demo Student stats ───────────────────────────────────────────────────────
+export const DEMO_STUDENT_STATS = {
+  study_minutes_week: 45,
+  listens_week: 3,
+  points_total: 180,
+  streak_days: 5,
+};
+
+export interface DemoAssignment {
+  id: string;
+  title: string;
+  class_id: string;
+  class_name: string;
+  created_at: string;
+  score: number | null; // null = chưa nộp
+}
+
+export const DEMO_STUDENT_ASSIGNMENTS: DemoAssignment[] = [
+  { id: "demo-a1", title: "Bài tập Unit 5 — Từ vựng Gia đình", class_id: CLASS_6A, class_name: "Lớp 6A — Tiếng Anh giao tiếp", created_at: new Date(Date.now() - 3 * 86400_000).toISOString(), score: 85 },
+  { id: "demo-a2", title: "Nghe hiểu — CLOTHES, FEELINGS AND SHOPPING", class_id: CLASS_6A, class_name: "Lớp 6A — Tiếng Anh giao tiếp", created_at: new Date(Date.now() - 1 * 86400_000).toISOString(), score: null },
+];
+
+// ─── Demo Parent data ─────────────────────────────────────────────────────────
+export interface DemoChildRow {
+  student_id: string;
+  full_name: string;
+  email: string;
+  avatar_url: null;
+  last_seen: string | null;
+  class_names: string[];
+}
+
+export const DEMO_PARENT_CHILDREN: DemoChildRow[] = [
+  {
+    student_id: "demo-s1",
+    full_name: "Nguyễn Minh An",
+    email: "minhan@pps.edu.vn",
+    avatar_url: null,
+    last_seen: new Date(Date.now() - 2 * 60 * 1000).toISOString(), // online 2 phút trước
+    class_names: ["Lớp 6A — Tiếng Anh giao tiếp"],
+  },
+];
+
+export interface DemoNoteRow {
+  id: string;
+  note: string;
+  created_at: string;
+  student_id: string;
+  student_name: string;
+  class_name: string;
+}
+
+export const DEMO_PARENT_NOTES: DemoNoteRow[] = [
+  { id: "demo-n1", note: "Minh An tiến bộ rõ rệt trong phát âm. Cần luyện thêm phần nghe để cải thiện tốc độ hiểu.", created_at: new Date(Date.now() - 1 * 86400_000).toISOString(), student_id: "demo-s1", student_name: "Nguyễn Minh An", class_name: "Lớp 6A" },
+  { id: "demo-n2", note: "An hoàn thành đầy đủ bài tập Unit 5. Điểm bài kiểm tra: 8.5/10. Giỏi!", created_at: new Date(Date.now() - 3 * 86400_000).toISOString(), student_id: "demo-s1", student_name: "Nguyễn Minh An", class_name: "Lớp 6A" },
+  { id: "demo-n3", note: "An nghỉ buổi học thứ 4 tuần trước. Đã bù bài. Phụ huynh lưu ý theo dõi việc học ở nhà.", created_at: new Date(Date.now() - 7 * 86400_000).toISOString(), student_id: "demo-s1", student_name: "Nguyễn Minh An", class_name: "Lớp 6A" },
+];
+
+export interface DemoAttRow {
+  student_id: string;
+  date: string;
+  status: "present" | "absent" | "late";
+}
+
+export const DEMO_PARENT_ATTENDANCE: DemoAttRow[] = [
+  { student_id: "demo-s1", date: new Date(Date.now() - 0 * 86400_000).toISOString().slice(0, 10), status: "present" },
+  { student_id: "demo-s1", date: new Date(Date.now() - 2 * 86400_000).toISOString().slice(0, 10), status: "present" },
+  { student_id: "demo-s1", date: new Date(Date.now() - 4 * 86400_000).toISOString().slice(0, 10), status: "present" },
+  { student_id: "demo-s1", date: new Date(Date.now() - 6 * 86400_000).toISOString().slice(0, 10), status: "absent" },
+  { student_id: "demo-s1", date: new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10), status: "present" },
+];
+
 /** Một người dùng có phải đang ở chế độ xem thử không (id dạng "demo-..."). */
 export const isDemoId = (id: string) => id.startsWith("demo-");
 

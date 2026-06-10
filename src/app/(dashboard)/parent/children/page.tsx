@@ -1,6 +1,7 @@
 import { Plus, Baby, Wifi, WifiOff, GraduationCap, Trash2 } from "lucide-react";
 import { requireRole } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
+import { isDemoId, DEMO_PARENT_CHILDREN } from "@/lib/demo-data";
 import { DashboardShell } from "@/components/DashboardShell";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/EmptyState";
@@ -24,10 +25,18 @@ function isOnline(lastSeen: string | null) {
 
 export default async function ChildrenPage() {
   const profile = await requireRole("parent");
-  const supabase = await createClient();
+  const demo = isDemoId(profile.id);
 
-  const { data } = await supabase.rpc("get_my_children");
-  const children: ChildRow[] = (data as ChildRow[]) ?? [];
+  let children: ChildRow[] = [];
+  if (demo) {
+    children = DEMO_PARENT_CHILDREN as unknown as ChildRow[];
+  } else {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.rpc("get_my_children");
+      children = (data as ChildRow[]) ?? [];
+    } catch { /* chưa cấu hình Supabase */ }
+  }
 
   return (
     <DashboardShell role="parent" userName={profile.full_name || "Phụ huynh"}>

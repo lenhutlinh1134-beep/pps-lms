@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ListChecks, ArrowRight, Trophy } from "lucide-react";
 import { requireRole } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
+import { isDemoId, DEMO_STUDENT_ASSIGNMENTS, CLASS_6A } from "@/lib/demo-data";
 import { DashboardShell } from "@/components/DashboardShell";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/EmptyState";
@@ -19,42 +20,53 @@ interface AssignmentRow {
 
 export default async function ExercisesPage() {
   const profile = await requireRole("student");
-  const supabase = await createClient();
+  const demo = isDemoId(profile.id);
 
-  // Lấy danh sách bài tập của các lớp HS đang học
-  const { data: classLinks } = await supabase
-    .from("class_students")
-    .select("class_id")
-    .eq("student_id", profile.id);
-
-  const classIds = (classLinks ?? []).map((r) => r.class_id);
-
+  let classIds: string[] = [];
   let assignments: AssignmentRow[] = [];
-  if (classIds.length > 0) {
-    const { data } = await supabase
-      .from("assignments")
-      .select(`
-        id, title, class_id, created_at,
-        class:classes(name)
-      `)
-      .in("class_id", classIds)
-      .order("created_at", { ascending: false });
 
-    const rawAssignments = (data ?? []) as unknown as AssignmentRow[];
+  if (demo) {
+    classIds = [CLASS_6A];
+    assignments = DEMO_STUDENT_ASSIGNMENTS.map((a) => ({
+      id: a.id,
+      title: a.title,
+      class_id: a.class_id,
+      created_at: a.created_at,
+      class: { name: a.class_name },
+      mySubmission: a.score !== null ? { score: a.score } : null,
+    }));
+  } else {
+    try {
+      const supabase = await createClient();
+      const { data: classLinks } = await supabase
+        .from("class_students")
+        .select("class_id")
+        .eq("student_id", profile.id);
 
-    // Lấy bài đã nộp
-    if (rawAssignments.length > 0) {
-      const { data: subs } = await supabase
-        .from("submissions")
-        .select("assignment_id, score")
-        .eq("student_id", profile.id)
-        .in("assignment_id", rawAssignments.map((a) => a.id));
-      const subMap = new Map((subs ?? []).map((s) => [s.assignment_id, s]));
-      assignments = rawAssignments.map((a) => ({
-        ...a,
-        mySubmission: subMap.get(a.id) ? { score: subMap.get(a.id)!.score } : null,
-      }));
-    }
+      classIds = (classLinks ?? []).map((r) => r.class_id);
+
+      if (classIds.length > 0) {
+        const { data } = await supabase
+          .from("assignments")
+          .select("id, title, class_id, created_at, class:classes(name)")
+          .in("class_id", classIds)
+          .order("created_at", { ascending: false });
+
+        const rawAssignments = (data ?? []) as unknown as AssignmentRow[];
+        if (rawAssignments.length > 0) {
+          const { data: subs } = await supabase
+            .from("submissions")
+            .select("assignment_id, score")
+            .eq("student_id", profile.id)
+            .in("assignment_id", rawAssignments.map((a) => a.id));
+          const subMap = new Map((subs ?? []).map((s) => [s.assignment_id, s]));
+          assignments = rawAssignments.map((a) => ({
+            ...a,
+            mySubmission: subMap.get(a.id) ? { score: subMap.get(a.id)!.score } : null,
+          }));
+        }
+      }
+    } catch { /* bỏ qua lỗi */ }
   }
 
   return (

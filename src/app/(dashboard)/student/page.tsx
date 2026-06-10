@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { requireRole } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
+import { isDemoId, DEMO_STUDENT_STATS } from "@/lib/demo-data";
 import { DashboardShell } from "@/components/DashboardShell";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -58,13 +59,16 @@ export default async function StudentDashboard() {
   const profile = await requireRole("student");
   const firstName = (profile.full_name || "bạn").split(" ").slice(-1)[0];
 
-  // Lấy số liệu thật từ student_logs
   let stats: WeeklyStats = { study_minutes_week: 0, listens_week: 0, points_total: 0, streak_days: 0 };
-  try {
-    const supabase = await createClient();
-    const { data } = await supabase.rpc("get_my_weekly_stats");
-    if (data && Array.isArray(data) && data[0]) stats = data[0] as WeeklyStats;
-  } catch { /* bỏ qua lỗi khi chưa cấu hình Supabase */ }
+  if (isDemoId(profile.id)) {
+    stats = DEMO_STUDENT_STATS;
+  } else {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.rpc("get_my_weekly_stats");
+      if (data && Array.isArray(data) && data[0]) stats = data[0] as WeeklyStats;
+    } catch { /* bỏ qua lỗi khi chưa cấu hình Supabase */ }
+  }
 
   const weeklyGoalPct = Math.min(100, Math.round((stats.study_minutes_week / WEEKLY_GOAL_MINUTES) * 100));
   const streakDays = stats.streak_days;
