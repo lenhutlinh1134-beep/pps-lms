@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/EmptyState";
 import { computeFlags, type StudentMetrics } from "@/lib/flags";
 import { cn } from "@/lib/utils";
+import { isDemoId, CLASS_6A, CLASS_7B } from "@/lib/demo-data";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +78,36 @@ export default async function ReportsPage({
   const tab: TabKey = VALID_TABS.includes(rawTab) ? (rawTab as TabKey) : "flags";
 
   const profile = await requireRole("teacher");
+  const demo = isDemoId(profile.id);
+
+  // Khai báo biến dùng chung cho cả demo và real mode
+  let metricsRows: MetricsRow[] = [];
+  let analyzed: ReturnType<typeof buildAnalyzed> = [];
+  let flagCount = 0;
+  let assignments: AssignmentRow[] = [];
+  let classAttendance: ClassAttendance[] = [];
+
+  if (demo) {
+    const daysAgo = (n: number) => new Date(Date.now() - n * 86400_000).toISOString();
+    const demoMetrics: MetricsRow[] = [
+      { student_id: "demo-s5", student_name: "Hoàng Nhật Minh", class_id: CLASS_6A, class_name: "Lớp 6A", study_minutes_week: 5, listens_week: 0, days_since_active: 8, avg_score: 4.5 },
+      { student_id: "demo-s3", student_name: "Lê Gia Huy", class_id: CLASS_6A, class_name: "Lớp 6A", study_minutes_week: 12, listens_week: 1, days_since_active: 3, avg_score: 6.0 },
+      { student_id: "demo-s1", student_name: "Nguyễn Minh An", class_id: CLASS_6A, class_name: "Lớp 6A", study_minutes_week: 45, listens_week: 4, days_since_active: 1, avg_score: 8.5 },
+      { student_id: "demo-s9", student_name: "Đặng Hải Đăng", class_id: CLASS_7B, class_name: "Lớp 7B", study_minutes_week: 60, listens_week: 5, days_since_active: 0, avg_score: 9.0 },
+    ];
+    metricsRows = demoMetrics;
+    analyzed = buildAnalyzed(demoMetrics);
+    flagCount = analyzed.filter(x => x.flags.length > 0).length;
+    assignments = [
+      { id: "da1", title: "Bài tập Unit 5 — Từ vựng Gia đình", type: "quiz", created_at: daysAgo(5), class_id: CLASS_6A, class_name: "Lớp 6A", total_students: 8, submitted: 7, avg_score: 7.2, pass_count: 6 },
+      { id: "da2", title: "PET Practice Test 1", type: "quiz", created_at: daysAgo(10), class_id: CLASS_7B, class_name: "Lớp 7B", total_students: 5, submitted: 5, avg_score: 8.1, pass_count: 5 },
+      { id: "da3", title: "Listening Comprehension Unit 3", type: "quiz", created_at: daysAgo(14), class_id: CLASS_6A, class_name: "Lớp 6A", total_students: 8, submitted: 5, avg_score: 6.4, pass_count: 4 },
+    ];
+    classAttendance = [
+      { class_id: CLASS_6A, class_name: "Lớp 6A — Tiếng Anh giao tiếp", student_count: 8, session_count: 8, present_count: 56, absent_count: 6, late_count: 2, total_records: 64 },
+      { class_id: CLASS_7B, class_name: "Lớp 7B — Luyện thi PET", student_count: 5, session_count: 8, present_count: 38, absent_count: 1, late_count: 1, total_records: 40 },
+    ];
+  } else {
   const supabase = await createClient();
 
   // Lấy class IDs của GV — dùng chung cho tất cả tabs
@@ -88,10 +119,6 @@ export default async function ReportsPage({
 
   // ── Tab: Cảnh báo HS ──────────────────────────────────────────────────────
 
-  let metricsRows: MetricsRow[] = [];
-  let analyzed: ReturnType<typeof buildAnalyzed> = [];
-  let flagCount = 0;
-
   if (tab === "flags") {
     const { data } = await supabase.rpc("get_all_my_students_metrics");
     metricsRows = (data as MetricsRow[]) ?? [];
@@ -100,8 +127,6 @@ export default async function ReportsPage({
   }
 
   // ── Tab: Kết quả bài tập ──────────────────────────────────────────────────
-
-  let assignments: AssignmentRow[] = [];
 
   if (tab === "assignments" && classIds.length > 0) {
     const [aRes, csRes] = await Promise.all([
@@ -163,8 +188,6 @@ export default async function ReportsPage({
 
   // ── Tab: Báo cáo điểm danh ────────────────────────────────────────────────
 
-  let classAttendance: ClassAttendance[] = [];
-
   if (tab === "attendance" && classIds.length > 0) {
     const [clRes, csRes, attRes] = await Promise.all([
       supabase.from("classes").select("id, name").in("id", classIds),
@@ -204,6 +227,8 @@ export default async function ReportsPage({
       };
     });
   }
+
+  } // end else (non-demo)
 
   // ── Render ────────────────────────────────────────────────────────────────
 

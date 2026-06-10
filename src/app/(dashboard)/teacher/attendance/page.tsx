@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DashboardShell } from "@/components/DashboardShell";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/EmptyState";
+import { isDemoId, DEMO_CLASSES } from "@/lib/demo-data";
 
 export const dynamic = "force-dynamic";
 
@@ -17,16 +18,32 @@ interface ClassRow {
 
 export default async function AttendancePage() {
   const profile = await requireRole("teacher");
-  const supabase = await createClient();
+  const demo = isDemoId(profile.id);
 
-  const { data } = await supabase
-    .from("class_teachers")
-    .select("class:classes(id, name, year, school:schools(name))")
-    .eq("teacher_id", profile.id)
-    .order("added_at", { ascending: false });
+  let classes: ClassRow[] = [];
 
-  const classes: ClassRow[] = ((data ?? []) as unknown as Array<{ class: ClassRow | ClassRow[] | null }>)
-    .flatMap((r) => (Array.isArray(r.class) ? r.class : r.class ? [r.class] : []));
+  if (demo) {
+    classes = DEMO_CLASSES.map((c) => ({
+      id: c.id,
+      name: c.name,
+      year: c.year,
+      school: c.school,
+    }));
+  } else {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from("class_teachers")
+        .select("class:classes(id, name, year, school:schools(name))")
+        .eq("teacher_id", profile.id)
+        .order("added_at", { ascending: false });
+
+      classes = ((data ?? []) as unknown as Array<{ class: ClassRow | ClassRow[] | null }>)
+        .flatMap((r) => (Array.isArray(r.class) ? r.class : r.class ? [r.class] : []));
+    } catch {
+      classes = [];
+    }
+  }
 
   return (
     <DashboardShell role="teacher" userName={profile.full_name || "Giáo viên"}>
@@ -62,6 +79,7 @@ export default async function AttendancePage() {
                     <div className="flex-1">
                       <h3 className="text-headline-sm">{c.name}</h3>
                       <p className="mt-xs text-body-md text-on-surface-variant">{schoolName ?? "—"}</p>
+                      {c.year && <p className="text-label-sm text-on-surface-variant">{c.year}</p>}
                     </div>
                     <p className="flex items-center gap-1 text-label-md font-semibold text-primary">
                       <ClipboardCheck size={16} /> Điểm danh ngay <ArrowRight size={14} />
