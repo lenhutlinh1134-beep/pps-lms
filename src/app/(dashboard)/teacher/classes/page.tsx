@@ -16,6 +16,7 @@ interface ClassRow {
     id: string;
     name: string;
     year: string | null;
+    level: string | null;
     created_at: string;
     school: { name: string } | null;
   } | null;
@@ -28,14 +29,14 @@ export default async function TeacherClassesPage() {
   if (isDemoId(profile.id)) {
     rows = DEMO_CLASSES.map((c) => ({
       role: c.role,
-      class: { id: c.id, name: c.name, year: c.year, created_at: "", school: c.school },
+      class: { id: c.id, name: c.name, year: c.year, level: c.level, created_at: "", school: c.school },
     }));
   } else {
     try {
       const supabase = await createClient();
       const { data } = await supabase
         .from("class_teachers")
-        .select("role, class:classes(id, name, year, created_at, school:schools(name))")
+        .select("role, class:classes(id, name, year, level, created_at, school:schools(name))")
         .eq("teacher_id", profile.id)
         .order("added_at", { ascending: false });
       rows = (data as unknown as ClassRow[]) ?? [];
@@ -81,9 +82,16 @@ export default async function TeacherClassesPage() {
                     <span className="flex h-12 w-12 items-center justify-center rounded-md bg-primary-fixed text-primary">
                       <Users size={24} />
                     </span>
-                    <Chip color={r.role === "owner" ? "secondary" : "neutral"}>
-                      {r.role === "owner" ? "Chủ lớp" : "Đồng GV"}
-                    </Chip>
+                    <div className="flex items-center gap-xs">
+                      {r.class!.level && (
+                        <span className="rounded-full bg-primary-fixed px-2.5 py-0.5 text-label-sm font-bold text-primary">
+                          {r.class!.level}
+                        </span>
+                      )}
+                      <Chip color={r.role === "owner" ? "secondary" : "neutral"}>
+                        {r.role === "owner" ? "Chủ lớp" : "Đồng GV"}
+                      </Chip>
+                    </div>
                   </div>
                   <div className="flex-1">
                     <h3 className="text-headline-sm">{r.class!.name}</h3>

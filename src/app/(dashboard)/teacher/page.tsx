@@ -14,8 +14,8 @@ export const dynamic = "force-dynamic";
 const quickActions = [
   { icon: Users, label: "Tạo lớp mới", desc: "Trường, lớp, năm học…", color: "text-primary", bg: "bg-primary-fixed", href: "/teacher/classes/new" },
   { icon: Video, label: "Đăng bài giảng", desc: "Video & file lý thuyết", color: "text-secondary", bg: "bg-secondary-fixed", href: "/teacher/lectures/new" },
-  { icon: ClipboardCheck, label: "Điểm danh", desc: "Ghi nhận có mặt / vắng", color: "text-tertiary", bg: "bg-tertiary-fixed", href: null },
-  { icon: BarChart3, label: "Xem báo cáo", desc: "Tiến trình & cảnh báo", color: "text-primary", bg: "bg-primary-fixed", href: null },
+  { icon: ClipboardCheck, label: "Điểm danh", desc: "Ghi nhận có mặt / vắng", color: "text-tertiary", bg: "bg-tertiary-fixed", href: "/teacher/attendance" },
+  { icon: BarChart3, label: "Xem báo cáo", desc: "Tiến trình & cảnh báo", color: "text-primary", bg: "bg-primary-fixed", href: "/teacher/reports" },
 ];
 
 interface Overview { total_classes: number; total_students: number; online_now: number }
@@ -101,7 +101,12 @@ export default async function TeacherDashboard() {
                       <span className="flex h-12 w-12 items-center justify-center rounded-md bg-primary-fixed text-primary">
                         <Users size={24} />
                       </span>
-                      <Chip color="secondary">Chủ lớp</Chip>
+                      <div className="flex items-center gap-xs">
+                        <span className="rounded-full bg-primary-fixed px-2.5 py-0.5 text-label-sm font-bold text-primary">
+                          {c.level}
+                        </span>
+                        <Chip color="secondary">Chủ lớp</Chip>
+                      </div>
                     </div>
                     <div className="flex-1">
                       <h3 className="text-headline-sm">{c.name}</h3>

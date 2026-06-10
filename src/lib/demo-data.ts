@@ -16,6 +16,7 @@ export interface DemoClass {
   id: string;
   name: string;
   year: string;
+  level: string;
   school: { name: string };
   role: "owner" | "co_teacher";
 }
@@ -29,8 +30,8 @@ export const CLASS_6A = "demo-class-6a";
 export const CLASS_7B = "demo-class-7b";
 
 export const DEMO_CLASSES: DemoClass[] = [
-  { id: CLASS_6A, name: "Lớp 6A — Tiếng Anh giao tiếp", year: YEAR, school: SCHOOL, role: "owner" },
-  { id: CLASS_7B, name: "Lớp 7B — Luyện thi PET", year: YEAR, school: SCHOOL, role: "owner" },
+  { id: CLASS_6A, name: "Lớp 6A — Tiếng Anh giao tiếp", year: YEAR, level: "A2", school: SCHOOL, role: "owner" },
+  { id: CLASS_7B, name: "Lớp 7B — Luyện thi PET", year: YEAR, level: "B1", school: SCHOOL, role: "owner" },
 ];
 
 export const DEMO_STUDENTS: Record<string, DemoStudent[]> = {
