@@ -18,7 +18,8 @@ import { cn } from "@/lib/utils";
 interface Student { id: string; full_name: string | null; email: string | null }
 interface Note { id: string; student_id: string; note: string; created_at: string }
 type AttStatus = "present" | "absent" | "late";
-type Tab = "students" | "attendance" | "history" | "notes" | "flags" | "teachers";
+export type ClassTab = "students" | "attendance" | "history" | "notes" | "flags" | "teachers";
+type Tab = ClassTab;
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -26,13 +27,16 @@ export function ClassManager({
   classId,
   initialStudents,
   demo = false,
+  initialTab = "students",
 }: {
   classId: string;
   initialStudents: Student[];
   /** Chế độ xem thử: dùng dữ liệu mẫu, mọi thao tác chỉ giả lập (không gọi máy chủ). */
   demo?: boolean;
+  /** Tab mở sẵn khi vào trang (vd: từ nút "Điểm danh ngay" trên dashboard). */
+  initialTab?: Tab;
 }) {
-  const [tab, setTab] = useState<Tab>("students");
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [students, setStudents] = useState<Student[]>(initialStudents);
 
   const refreshStudents = useCallback(async () => {

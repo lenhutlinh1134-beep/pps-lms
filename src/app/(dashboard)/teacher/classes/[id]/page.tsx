@@ -4,7 +4,7 @@ import { ArrowLeft, Calendar, School } from "lucide-react";
 import { requireRole } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardShell } from "@/components/DashboardShell";
-import { ClassManager } from "@/components/teacher/ClassManager";
+import { ClassManager, type ClassTab } from "@/components/teacher/ClassManager";
 import { ClassAnnouncementPanel, type AnnouncementItem } from "@/components/teacher/ClassAnnouncementPanel";
 import { isDemoId, demoClass, demoStudents } from "@/lib/demo-data";
 
@@ -12,12 +12,18 @@ export const dynamic = "force-dynamic";
 
 interface Student { id: string; full_name: string | null; email: string | null }
 
+const CLASS_TABS: ClassTab[] = ["students", "attendance", "history", "notes", "flags", "teachers"];
+
 export default async function ClassDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const { id } = await params;
+  const { tab } = await searchParams;
+  const initialTab: ClassTab = CLASS_TABS.includes(tab as ClassTab) ? (tab as ClassTab) : "students";
   const profile = await requireRole("teacher");
   const demo = isDemoId(profile.id);
 
@@ -84,7 +90,7 @@ export default async function ClassDetailPage({
           </div>
         </div>
 
-        <ClassManager classId={id} initialStudents={students} demo={demo} />
+        <ClassManager classId={id} initialStudents={students} demo={demo} initialTab={initialTab} />
         <ClassAnnouncementPanel classId={id} initialItems={announcements} demo={demo} />
       </div>
     </DashboardShell>
