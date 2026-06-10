@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PPS LMS — Học tiếng Anh online vui hơn, hiệu quả hơn</title>
+  <meta name="description" content="Nền tảng học tiếng Anh online của Trung tâm Anh ngữ PPS Vietnam: luyện nghe, học lý thuyết, làm bài tập và theo dõi tiến trình." />
+
+  <!-- Font: Plus Jakarta Sans (tiêu đề) + Inter (nội dung) theo dign.md -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind (Play CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    // Ánh xạ design token từ dign.md / tailwind.config.ts của dự án
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: "#f8f9ff",
+            "on-background": "#0b1c30",
+            surface: {
+              DEFAULT: "#f8f9ff", dim: "#cbdbf5", bright: "#f8f9ff",
+              "container-lowest": "#ffffff", "container-low": "#eff4ff",
+              container: "#e5eeff", "container-high": "#dce9ff",
+              "container-highest": "#d3e4fe", variant: "#d3e4fe",
+              tint: "#6d3bd7", inverse: "#213145",
+            },
+            "on-surface": "#0b1c30",
+            "on-surface-variant": "#494454",
+            "inverse-on-surface": "#eaf1ff",
+            outline: { DEFAULT: "#7b7486", variant: "#cbc3d7" },
+            primary: { DEFAULT: "#6b38d4", container: "#8455ef", fixed: "#e9ddff", "fixed-dim": "#d0bcff", inverse: "#d0bcff" },
+            "on-primary": "#ffffff", "on-primary-container": "#fffbff",
+            "on-primary-fixed": "#23005c", "on-primary-fixed-variant": "#5516be",
+            secondary: { DEFAULT: "#b4136d", container: "#fd56a7", fixed: "#ffd9e4", "fixed-dim": "#ffb0cd" },
+            "on-secondary": "#ffffff", "on-secondary-container": "#600037",
+            "on-secondary-fixed": "#3e0022", "on-secondary-fixed-variant": "#8c0053",
+            tertiary: { DEFAULT: "#006577", container: "#008096", fixed: "#acedff", "fixed-dim": "#4cd7f6" },
+            "on-tertiary": "#ffffff", "on-tertiary-container": "#f9fdff",
+            "on-tertiary-fixed": "#001f26", "on-tertiary-fixed-variant": "#004e5c",
+            error: { DEFAULT: "#ba1a1a", container: "#ffdad6" },
+            "on-error": "#ffffff", "on-error-container": "#93000a",
+          },
+          fontFamily: {
+            sans: ["Inter", "system-ui", "sans-serif"],
+            display: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
+          },
+          fontSize: {
+            "display-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }],
+            "headline-md": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "700" }],
+            "headline-sm": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+            "body-lg": ["16px", { lineHeight: "26px", fontWeight: "400" }],
+            "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+            "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
+            "label-sm": ["11px", { lineHeight: "14px", fontWeight: "500" }],
+          },
+          borderRadius: { sm: "0.25rem", DEFAULT: "0.5rem", md: "0.75rem", lg: "1rem", xl: "1.5rem", full: "9999px" },
+          spacing: { xs: "4px", sm: "8px", md: "16px", lg: "24px", xl: "32px", gutter: "16px", "margin-mobile": "20px" },
+          boxShadow: {
+            card: "0 4px 20px rgba(0, 0, 0, 0.04)",
+            "card-hover": "0 8px 28px rgba(107, 56, 212, 0.12)",
+            popover: "0 8px 30px rgba(11, 28, 48, 0.08)",
+          },
+          backdropBlur: { glass: "20px" },
+          backgroundImage: {
+            premium: "linear-gradient(135deg, #6b38d4 0%, #b4136d 100%)",
+            "premium-soft": "linear-gradient(135deg, #8455ef 0%, #fd56a7 100%)",
+          },
+        },
+      },
+    };
+  </script>
+
+  <style type="text/tailwindcss">
+    @layer base {
+      body { @apply bg-background text-on-surface font-sans antialiased; }
+      h1, h2, h3, h4 { @apply font-display text-on-surface; }
+      html { scroll-behavior: smooth; }
+    }
+    @layer components {
+      .glass { @apply bg-white/70 backdrop-blur-glass border border-white/40; }
+    }
+    @layer utilities {
+      .animate-float { animation: float 6s ease-in-out infinite; }
+      .animate-float-slow { animation: float 9s ease-in-out infinite; }
+      .animate-fade-up { opacity: 0; animation: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+      .animate-blob { animation: blob 14s ease-in-out infinite; }
+      @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+      @keyframes fade-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes blob {
+        0%,100% { transform: translate(0,0) scale(1); }
+        33% { transform: translate(24px,-28px) scale(1.08); }
+        66% { transform: translate(-18px,16px) scale(0.94); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .animate-float, .animate-float-slow, .animate-fade-up, .animate-blob { animation: none; opacity: 1; }
+      }
+    }
+  </style>
+</head>
+
+<body class="relative min-h-screen overflow-x-hidden">
+  <!-- Khối gradient mờ tạo chiều sâu (glassmorphism background) -->
+  <div aria-hidden="true" class="pointer-events-none fixed inset-0 overflow-hidden -z-10">
+    <div class="animate-blob absolute -left-32 -top-32 h-[420px] w-[420px] rounded-full bg-primary-fixed-dim opacity-50 blur-3xl"></div>
+    <div class="animate-blob absolute -right-24 top-40 h-[360px] w-[360px] rounded-full bg-secondary-fixed-dim opacity-40 blur-3xl" style="animation-delay:3s"></div>
+    <div class="animate-blob absolute bottom-0 left-1/3 h-[380px] w-[380px] rounded-full bg-tertiary-fixed opacity-30 blur-3xl" style="animation-delay:6s"></div>
+  </div>
+
+  <!-- ===================== Thanh điều hướng ===================== -->
+  <header class="glass sticky top-0 z-30">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-margin-mobile py-md md:px-lg">
+      <a href="#" class="flex items-center gap-2">
+        <span class="flex h-10 w-10 items-center justify-center rounded-md bg-premium text-white shadow-card-hover">
+          <i data-lucide="graduation-cap" class="h-[22px] w-[22px]"></i>
+        </span>
+        <span class="font-display text-headline-sm">PPS LMS</span>
+      </a>
+      <nav class="hidden items-center gap-lg text-body-md text-on-surface-variant md:flex">
+        <a href="#tinh-nang" class="transition-colors hover:text-primary">Tính năng</a>
+        <a href="#vai-tro" class="transition-colors hover:text-primary">Vai trò</a>
+        <a href="#canh-bao" class="transition-colors hover:text-primary">Cảnh báo thông minh</a>
+      </nav>
+      <div class="flex items-center gap-sm">
+        <a href="#" class="hidden sm:inline-flex h-9 items-center justify-center rounded-full border border-outline-variant px-4 text-label-md font-semibold transition-colors hover:bg-surface-container">Đăng nhập</a>
+        <a href="#" class="inline-flex h-9 items-center justify-center rounded-full bg-primary px-4 text-label-md font-semibold text-on-primary shadow-card-hover transition-colors hover:bg-primary-container">Đăng ký</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== Hero ===================== -->
+  <section class="relative z-10 mx-auto grid max-w-6xl items-center gap-xl px-margin-mobile pt-xl pb-lg md:grid-cols-2 md:px-lg md:pt-[72px] md:pb-xl">
+    <!-- Cột chữ -->
+    <div class="animate-fade-up text-center md:text-left">
+      <span class="mb-md inline-flex items-center gap-2 rounded-full bg-secondary-fixed px-4 py-1 text-label-md text-on-secondary-fixed">
+        <i data-lucide="sparkles" class="h-3.5 w-3.5"></i> Trung tâm Anh ngữ PPS Vietnam
+      </span>
+      <h1 class="text-display-lg md:text-[46px] md:leading-[54px]">
+        Học tiếng Anh online
+        <span class="bg-premium bg-clip-text text-transparent">vui hơn, hiệu quả hơn</span>
+      </h1>
+      <p class="mx-auto mt-md max-w-xl text-body-lg text-on-surface-variant md:mx-0">
+        Nền tảng kết nối học sinh – giáo viên – phụ huynh: luyện nghe, học lý thuyết, làm bài tập
+        và theo dõi tiến trình học tập, mọi lúc mọi nơi.
+      </p>
+      <div class="mt-lg flex flex-col items-center justify-center gap-sm sm:flex-row md:justify-start">
+        <a href="#" class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-premium px-8 text-body-lg font-semibold text-white shadow-card-hover transition hover:opacity-95 sm:w-auto">
+          Bắt đầu học ngay <i data-lucide="arrow-right" class="h-5 w-5"></i>
+        </a>
+        <a href="#" class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full border border-outline-variant px-8 text-body-lg font-semibold transition hover:bg-surface-container sm:w-auto">
+          <i data-lucide="headphones" class="h-[18px] w-[18px]"></i> Nghe thử miễn phí
+        </a>
+      </div>
+      <p class="mt-md flex items-center justify-center gap-2 text-label-md text-on-surface-variant md:justify-start">
+        <span class="flex -space-x-2">
+          <span class="h-6 w-6 rounded-full border-2 border-white" style="background:#8455ef"></span>
+          <span class="h-6 w-6 rounded-full border-2 border-white" style="background:#fd56a7"></span>
+          <span class="h-6 w-6 rounded-full border-2 border-white" style="background:#4cd7f6"></span>
+        </span>
+        <span class="flex items-center gap-0.5 text-secondary">
+          <i data-lucide="star" class="h-3.5 w-3.5" fill="currentColor"></i>
+          <i data-lucide="star" class="h-3.5 w-3.5" fill="currentColor"></i>
+          <i data-lucide="star" class="h-3.5 w-3.5" fill="currentColor"></i>
+          <i data-lucide="star" class="h-3.5 w-3.5" fill="currentColor"></i>
+          <i data-lucide="star" class="h-3.5 w-3.5" fill="currentColor"></i>
+        </span>
+        Được hàng nghìn học sinh tin dùng
+      </p>
+    </div>
+
+    <!-- Cột minh hoạ: mô phỏng trình "Học từ kết nối" -->
+    <div class="animate-fade-up relative mx-auto w-full max-w-md" style="animation-delay:0.15s">
+      <div class="glass animate-float rounded-xl p-lg shadow-popover">
+        <div class="flex items-center justify-between">
+          <span class="inline-flex items-center gap-2 rounded-full bg-primary-fixed px-3 py-1 text-label-md text-on-primary-fixed">
+            <i data-lucide="headphones" class="h-3.5 w-3.5"></i> Học từ kết nối
+          </span>
+          <span class="text-label-md text-on-surface-variant">Chủ đề: City</span>
+        </div>
+
+        <!-- Câu đang phát -->
+        <div class="mt-lg rounded-lg bg-surface-container-lowest p-lg shadow-card">
+          <p class="text-headline-sm leading-relaxed">
+            The <span class="rounded bg-primary-fixed px-1 text-on-primary-fixed">city</span> has many
+            <span class="rounded bg-secondary-fixed px-1 text-on-secondary-fixed">buildings</span> and busy
+            <span class="text-outline">streets.</span>
+          </p>
+          <p class="mt-sm text-body-md text-on-surface-variant">Thành phố có nhiều toà nhà và những con phố nhộn nhịp.</p>
+        </div>
+
+        <!-- Điều khiển -->
+        <div class="mt-lg flex items-center justify-center gap-lg">
+          <button class="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container" aria-label="Đoạn trước">
+            <i data-lucide="skip-back" class="h-5 w-5"></i>
+          </button>
+          <span class="flex h-14 w-14 items-center justify-center rounded-full bg-premium text-white shadow-card-hover">
+            <i data-lucide="play" class="h-[26px] w-[26px]" fill="currentColor"></i>
+          </span>
+          <button class="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container" aria-label="Đoạn sau">
+            <i data-lucide="skip-forward" class="h-5 w-5"></i>
+          </button>
+        </div>
+
+        <!-- Tiến trình -->
+        <div class="mt-lg">
+          <div class="h-2 w-full rounded-full bg-surface-container-high">
+            <div class="h-2 w-2/3 rounded-full bg-premium"></div>
+          </div>
+          <div class="mt-xs flex justify-between text-label-sm text-on-surface-variant">
+            <span>Đoạn 8 / 12</span>
+            <span>Tốc độ 1.0x · Giọng Aria</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thẻ thành tích nổi -->
+      <div class="animate-float-slow absolute -bottom-6 -left-4 hidden rounded-lg bg-surface-container-lowest p-md shadow-popover sm:block" style="animation-delay:1s">
+        <div class="flex items-center gap-sm">
+          <span class="flex h-10 w-10 items-center justify-center rounded-md bg-tertiary-fixed text-tertiary">
+            <i data-lucide="check-circle-2" class="h-5 w-5"></i>
+          </span>
+          <div>
+            <p class="text-label-md text-on-surface-variant">Hôm nay</p>
+            <p class="font-display text-headline-sm">+45 phút</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Dải số liệu ===================== -->
+  <section class="relative z-10 mx-auto max-w-6xl px-margin-mobile md:px-lg">
+    <div class="glass grid grid-cols-2 gap-md rounded-xl p-lg md:grid-cols-4">
+      <div class="text-center">
+        <p class="bg-premium bg-clip-text font-display text-headline-md text-transparent md:text-display-lg">10.000+</p>
+        <p class="mt-xs text-body-md text-on-surface-variant">Học sinh</p>
+      </div>
+      <div class="text-center">
+        <p class="bg-premium bg-clip-text font-display text-headline-md text-transparent md:text-display-lg">379</p>
+        <p class="mt-xs text-body-md text-on-surface-variant">Đoạn luyện nghe</p>
+      </div>
+      <div class="text-center">
+        <p class="bg-premium bg-clip-text font-display text-headline-md text-transparent md:text-display-lg">11</p>
+        <p class="mt-xs text-body-md text-on-surface-variant">Chủ đề từ vựng</p>
+      </div>
+      <div class="text-center">
+        <p class="bg-premium bg-clip-text font-display text-headline-md text-transparent md:text-display-lg">1.500+</p>
+        <p class="mt-xs text-body-md text-on-surface-variant">File âm thanh bản ngữ</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Tính năng ===================== -->
+  <section id="tinh-nang" class="relative z-10 mx-auto max-w-6xl px-margin-mobile py-xl md:px-lg md:py-[72px]">
+    <div class="mx-auto mb-xl max-w-2xl text-center">
+      <span class="text-label-md uppercase text-primary">Tính năng</span>
+      <h2 class="mt-xs text-headline-md md:text-display-lg">Mọi thứ cần cho một buổi học online trọn vẹn</h2>
+      <p class="mt-sm text-body-lg text-on-surface-variant">Từ luyện nghe, học lý thuyết tới làm bài tập và báo cáo — tất cả trong một nền tảng.</p>
+    </div>
+    <div class="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-4">
+      <div class="flex flex-col gap-md rounded-lg bg-surface-container-lowest p-lg shadow-card transition-shadow hover:shadow-card-hover">
+        <span class="flex h-12 w-12 items-center justify-center rounded-md bg-primary-fixed text-primary"><i data-lucide="headphones"></i></span>
+        <div><h3 class="text-headline-sm">Học từ kết nối</h3><p class="mt-xs text-body-md text-on-surface-variant">Luyện nghe – ghi nhớ từ vựng theo chủ đề với hàng nghìn file âm thanh chuẩn bản ngữ, kèm chế độ Chép & Nói.</p></div>
+      </div>
+      <div class="flex flex-col gap-md rounded-lg bg-surface-container-lowest p-lg shadow-card transition-shadow hover:shadow-card-hover">
+        <span class="flex h-12 w-12 items-center justify-center rounded-md bg-secondary-fixed text-secondary"><i data-lucide="book-open"></i></span>
+        <div><h3 class="text-headline-sm">Học lý thuyết</h3><p class="mt-xs text-body-md text-on-surface-variant">Bài giảng do giáo viên đăng trực tiếp, kèm video và hỏi đáp (Q&A) ngay dưới mỗi bài học.</p></div>
+      </div>
+      <div class="flex flex-col gap-md rounded-lg bg-surface-container-lowest p-lg shadow-card transition-shadow hover:shadow-card-hover">
+        <span class="flex h-12 w-12 items-center justify-center rounded-md bg-tertiary-fixed text-tertiary"><i data-lucide="list-checks"></i></span>
+        <div><h3 class="text-headline-sm">Làm bài tập</h3><p class="mt-xs text-body-md text-on-surface-variant">Trắc nghiệm và bài luyện tập giúp củng cố kiến thức sau mỗi buổi học.</p></div>
+      </div>
+      <div class="flex flex-col gap-md rounded-lg bg-surface-container-lowest p-lg shadow-card transition-shadow hover:shadow-card-hover">
+        <span class="flex h-12 w-12 items-center justify-center rounded-md bg-primary-fixed text-primary"><i data-lucide="line-chart"></i></span>
+        <div><h3 class="text-headline-sm">Theo dõi tiến trình</h3><p class="mt-xs text-body-md text-on-surface-variant">Giáo viên & phụ huynh nắm rõ thời lượng học, điểm danh và nhận xét của từng học sinh.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Ba vai trò ===================== -->
+  <section id="vai-tro" class="relative z-10 mx-auto max-w-6xl px-margin-mobile py-xl md:px-lg md:py-[72px]">
+    <div class="mx-auto mb-xl max-w-2xl text-center">
+      <span class="text-label-md uppercase text-secondary">Vai trò</span>
+      <h2 class="mt-xs text-headline-md md:text-display-lg">Một nền tảng, kết nối ba bên</h2>
+      <p class="mt-sm text-body-lg text-on-surface-variant">Học sinh học, giáo viên dạy và giám sát, phụ huynh theo dõi — liền mạch trong cùng một hệ thống.</p>
+    </div>
+    <div class="grid grid-cols-1 gap-md md:grid-cols-3">
+      <!-- Học sinh -->
+      <div class="flex flex-col gap-md rounded-lg bg-surface-container-lowest p-lg shadow-card transition-shadow hover:shadow-card-hover">
+        <span class="flex h-12 w-12 items-center justify-center rounded-md bg-primary-fixed text-primary"><i data-lucide="users"></i></span>
+        <h3 class="text-headline-sm">Học sinh</h3>
+        <ul class="flex flex-col gap-sm">
+          <li class="flex items-start gap-2 text-body-md text-on-surface-variant"><i data-lucide="check-circle-2" class="mt-0.5 h-[18px] w-[18px] shrink-0 text-primary"></i> Luyện nghe theo chủ đề</li>
+          <li class="flex items-start gap-2 text-body-md text-on-surface-variant"><i data-lucide="check-circle-2" class="mt-0.5 h-[18px] w-[18px] shrink-0 text-primary"></i> Xem bài giảng & đặt câu hỏi</li>
+          <li class="flex items-start gap-2 text-body-md text-on-surface-variant"><i data-lucide="check-circle-2" class="mt-0.5 h-[18px] w-[18px] shrink-0 text-primary"></i> Làm bài tập, theo dõi điểm</li>
+        </ul>
+      </div>
+      <!-- Giáo viên -->
+      <div class="flex flex-col gap-md rounded-lg bg-surface-container-lowest p-lg shadow-card transition-shadow hover:shadow-card-hover">
+        <span class="flex h-12 w-12 items-center justify-center rounded-md bg-secondary-fixed text-secondary"><i data-lucide="user-cog"></i></span>
+        <h3 class="text-headline-sm">Giáo viên</h3>
+        <ul class="flex flex-col gap-sm">
+          <li class="flex items-start gap-2 text-body-md text-on-surface-variant"><i data-lucide="check-circle-2" class="mt-0.5 h-[18px] w-[18px] shrink-0 text-secondary"></i> Mở lớp, đăng bài giảng</li>
+          <li class="flex items-start gap-2 text-body-md text-on-surface-variant"><i data-lucide="check-circle-2" class="mt-0.5 h-[18px] w-[18px] shrink-0 text-secondary"></i> Điểm danh & nhận xét</li>
+          <li class="flex items-start gap-2 text-body-md text-on-surface-variant"><i data-lucide="check-circle-2" class="mt-0.5 h-[18px] w-[18px] shrink-0 text-secondary"></i> Báo cáo cho phụ huynh</li>
+        </ul>
+      </div>
+      <!-- Phụ huynh -->
+      <div class="flex flex-col gap-md rounded-lg bg-surface-container-lowest p-lg shadow-card transition-shadow hover:shadow-card-hover">
+        <span class="flex h-12 w-12 items-center justify-center rounded-md bg-tertiary-fixed text-tertiary"><i data-lucide="heart-handshake"></i></span>
+        <h3 class="text-headline-sm">Phụ huynh</h3>
+        <ul class="flex flex-col gap-sm">
+          <li class="flex items-start gap-2 text-body-md text-on-surface-variant"><i data-lucide="check-circle-2" class="mt-0.5 h-[18px] w-[18px] shrink-0 text-tertiary"></i> Theo dõi tiến trình của con</li>
+          <li class="flex items-start gap-2 text-body-md text-on-surface-variant"><i data-lucide="check-circle-2" class="mt-0.5 h-[18px] w-[18px] shrink-0 text-tertiary"></i> Đọc nhận xét của giáo viên</li>
+          <li class="flex items-start gap-2 text-body-md text-on-surface-variant"><i data-lucide="check-circle-2" class="mt-0.5 h-[18px] w-[18px] shrink-0 text-tertiary"></i> Nhận lưu ý quan trọng</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Cảnh báo thông minh ===================== -->
+  <section id="canh-bao" class="relative z-10 mx-auto max-w-6xl px-margin-mobile py-xl md:px-lg md:py-[72px]">
+    <div class="grid items-center gap-xl md:grid-cols-2">
+      <div>
+        <span class="inline-flex items-center gap-2 rounded-full bg-secondary-fixed px-3 py-1 text-label-md text-on-secondary-fixed">
+          <i data-lucide="alarm-clock" class="h-3.5 w-3.5"></i> Flag Engine
+        </span>
+        <h2 class="mt-md text-headline-md md:text-display-lg">Cảnh báo thông minh, không bỏ sót học sinh nào</h2>
+        <p class="mt-sm text-body-lg text-on-surface-variant">
+          Hệ thống tự động phân tích hành vi học và gắn &ldquo;cờ&rdquo; cảnh báo, giúp giáo viên
+          can thiệp kịp thời và phụ huynh luôn yên tâm.
+        </p>
+      </div>
+      <div class="grid grid-cols-1 gap-md sm:grid-cols-2">
+        <div class="flex items-start gap-sm rounded-lg bg-surface-container-lowest p-md shadow-card">
+          <span class="text-2xl leading-none">🔴</span>
+          <div><p class="font-display text-body-lg font-semibold">Thời lượng không đạt</p><p class="mt-xs text-body-md text-on-surface-variant">Học dưới 30% yêu cầu → cảnh báo đỏ.</p></div>
+        </div>
+        <div class="flex items-start gap-sm rounded-lg bg-surface-container-lowest p-md shadow-card">
+          <span class="text-2xl leading-none">🎧</span>
+          <div><p class="font-display text-body-lg font-semibold">Luyện nghe chưa đủ</p><p class="mt-xs text-body-md text-on-surface-variant">Dưới 3 bài nghe mỗi tuần → nhắc nhở.</p></div>
+        </div>
+        <div class="flex items-start gap-sm rounded-lg bg-surface-container-lowest p-md shadow-card">
+          <span class="text-2xl leading-none">💤</span>
+          <div><p class="font-display text-body-lg font-semibold">Không hoạt động</p><p class="mt-xs text-body-md text-on-surface-variant">Không đăng nhập quá 7 ngày → cờ đỏ.</p></div>
+        </div>
+        <div class="flex items-start gap-sm rounded-lg bg-surface-container-lowest p-md shadow-card">
+          <span class="text-2xl leading-none">⚠️</span>
+          <div><p class="font-display text-body-lg font-semibold">Tiến độ thấp</p><p class="mt-xs text-body-md text-on-surface-variant">Điểm trung bình dưới 50% → cảnh báo.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CTA cuối ===================== -->
+  <section class="relative z-10 mx-auto max-w-6xl px-margin-mobile pb-xl md:px-lg">
+    <div class="relative overflow-hidden rounded-xl bg-premium p-xl text-center shadow-card-hover md:p-[56px]">
+      <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+        <div class="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-2xl"></div>
+        <div class="absolute -bottom-10 -left-10 h-48 w-48 rounded-full bg-white/10 blur-2xl"></div>
+      </div>
+      <div class="relative">
+        <h2 class="mx-auto max-w-2xl text-headline-md text-white md:text-display-lg">Sẵn sàng cho hành trình tiếng Anh của bạn?</h2>
+        <p class="mx-auto mt-sm max-w-xl text-body-lg text-white/85">Tạo tài khoản miễn phí và bắt đầu luyện nghe ngay hôm nay.</p>
+        <div class="mt-lg flex flex-col items-center justify-center gap-sm sm:flex-row">
+          <a href="#" class="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-white px-8 text-body-lg font-semibold text-primary transition hover:bg-white/90">
+            Đăng ký miễn phí <i data-lucide="arrow-right" class="h-5 w-5"></i>
+          </a>
+          <a href="#" class="inline-flex h-14 items-center justify-center gap-2 rounded-full border border-white/40 bg-white/10 px-8 text-body-lg font-semibold text-white transition hover:bg-white/20">
+            Nghe thử trước
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Footer ===================== -->
+  <footer class="relative z-10 border-t border-outline-variant">
+    <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-md px-margin-mobile py-lg text-center md:flex-row md:px-lg md:text-left">
+      <div class="flex items-center gap-2">
+        <span class="flex h-8 w-8 items-center justify-center rounded-md bg-premium text-white"><i data-lucide="graduation-cap" class="h-[18px] w-[18px]"></i></span>
+        <span class="font-display text-body-lg font-semibold">PPS LMS</span>
+      </div>
+      <p class="text-label-md text-on-surface-variant" id="copyright">© PPS Vietnam · Hệ thống học online</p>
+      <div class="flex items-center gap-md text-body-md text-on-surface-variant">
+        <a href="#" class="transition-colors hover:text-primary">Đăng nhập</a>
+        <a href="#" class="transition-colors hover:text-primary">Đăng ký</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Khởi tạo icon Lucide
+    lucide.createIcons();
+    // Năm động cho dòng bản quyền
+    document.getElementById("copyright").textContent =
+      "© " + new Date().getFullYear() + " PPS Vietnam · Hệ thống học online";
+  </script>
+</body>
+</html>

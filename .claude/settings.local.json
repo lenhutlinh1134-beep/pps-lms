@@ -1,0 +1,22 @@
+{
+  "enabledMcpjsonServers": [
+    "supabase"
+  ],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "command": "$j=[Console]::In.ReadToEnd()|ConvertFrom-Json;if($j.tool_input.file_path -match '\\.(ts|tsx)$'){npx tsc --noEmit}",
+            "async": true,
+            "timeout": 60,
+            "statusMessage": "Kiem tra TypeScript..."
+          }
+        ]
+      }
+    ]
+  }
+}

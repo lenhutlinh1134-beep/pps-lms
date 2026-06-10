@@ -1,0 +1,43 @@
+# Claude Code internal
+.agents/
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env files (CHỨA KEY SUPABASE — KHÔNG ĐƯỢC COMMIT)
+.env
+.env.local
+.env*.local
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# audio đã copy từ nguồn gốc (tái tạo bằng scripts + Copy-Item; production dùng Supabase Storage)
+/public/audio
+
+# vercel
+.vercel
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea
