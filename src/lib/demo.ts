@@ -7,8 +7,10 @@
 
 export const DEMO_COOKIE = "pps_demo_role";
 
-/** Cửa sau chỉ hoạt động khi KHÔNG phải production. */
-export const demoEnabled = process.env.NODE_ENV !== "production";
+/** Bật demo khi: đang dev HOẶC khi set NEXT_PUBLIC_ENABLE_DEMO=true (ví dụ trên Vercel để show khách). */
+export const demoEnabled =
+  process.env.NODE_ENV !== "production" ||
+  process.env.NEXT_PUBLIC_ENABLE_DEMO === "true";
 
 export type DemoRole = "student" | "teacher" | "parent" | "manager";
 
