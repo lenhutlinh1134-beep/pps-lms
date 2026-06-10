@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Fragment } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   GraduationCap, LogOut, Home, Headphones, BookOpen, ListChecks,
@@ -17,6 +18,8 @@ interface NavItem {
   label: string;
   href: string;
   icon: LucideIcon;
+  /** Hiển thị tiêu đề nhóm phía trên item này (chỉ sidebar desktop) */
+  groupLabel?: string;
 }
 
 const NAV: Record<Role, NavItem[]> = {
@@ -31,18 +34,22 @@ const NAV: Record<Role, NavItem[]> = {
     { label: "Nhắn tin", href: "/student/chat", icon: MessageCircle },
   ],
   teacher: [
-    { label: "Tổng quan", href: "/teacher", icon: Home },
-    { label: "Lớp học", href: "/teacher/classes", icon: Users },
-    { label: "Lịch dạy", href: "/teacher/schedule", icon: Calendar },
-    { label: "Bài giảng", href: "/teacher/lectures", icon: Video },
-    { label: "Bài tập", href: "/teacher/exercises", icon: BookMarked },
-    { label: "Kho tài liệu", href: "/teacher/library", icon: FolderOpen },
-    { label: "Ngân hàng ĐT", href: "/teacher/question-bank", icon: Database },
-    { label: "Phản hồi PH", href: "/teacher/feedback", icon: MessageSquarePlus },
-    { label: "Xin nghỉ", href: "/teacher/leaves", icon: CalendarOff },
-    { label: "Giám sát", href: "/teacher/monitor", icon: Activity },
-    { label: "Nhắn tin", href: "/teacher/chat", icon: MessageCircle },
-    { label: "Báo cáo", href: "/teacher/reports", icon: BarChart3 },
+    { label: "Tổng quan",     href: "/teacher",                icon: Home },
+    // ── Lớp học ──
+    { label: "Lớp học",       href: "/teacher/classes",        icon: Users,             groupLabel: "Lớp học" },
+    { label: "Lịch dạy",      href: "/teacher/schedule",       icon: Calendar },
+    // ── Nội dung ──
+    { label: "Bài giảng",     href: "/teacher/lectures",       icon: Video,             groupLabel: "Nội dung" },
+    { label: "Bài tập",       href: "/teacher/exercises",      icon: BookMarked },
+    { label: "Kho tài liệu",  href: "/teacher/library",        icon: FolderOpen },
+    { label: "Ngân hàng ĐT",  href: "/teacher/question-bank",  icon: Database },
+    // ── Theo dõi ──
+    { label: "Giám sát",      href: "/teacher/monitor",        icon: Activity,          groupLabel: "Theo dõi" },
+    { label: "Báo cáo",       href: "/teacher/reports",        icon: BarChart3 },
+    // ── Giao tiếp ──
+    { label: "Phản hồi PH",   href: "/teacher/feedback",       icon: MessageSquarePlus, groupLabel: "Giao tiếp" },
+    { label: "Nhắn tin",      href: "/teacher/chat",           icon: MessageCircle },
+    { label: "Xin nghỉ",      href: "/teacher/leaves",         icon: CalendarOff },
   ],
   manager: [
     { label: "Tổng quan", href: "/manager", icon: Home },
@@ -112,21 +119,27 @@ export function DashboardShell({
           <span className="font-display text-headline-sm">PPS LMS</span>
         </Link>
 
-        <nav className="flex flex-1 flex-col gap-xs">
+        <nav className="flex flex-1 flex-col gap-xs overflow-y-auto">
           {items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-sm rounded-md px-4 py-3 text-body-md font-medium transition-colors",
-                isActive(item.href)
-                  ? "bg-primary text-on-primary shadow-card-hover"
-                  : "text-on-surface-variant hover:bg-surface-container",
+            <Fragment key={item.href}>
+              {item.groupLabel && (
+                <p className="mt-sm px-4 pb-0.5 text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant/50">
+                  {item.groupLabel}
+                </p>
               )}
-            >
-              <item.icon size={20} />
-              {item.label}
-            </Link>
+              <Link
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-sm rounded-md px-4 py-2.5 text-body-md font-medium transition-colors",
+                  isActive(item.href)
+                    ? "bg-primary text-on-primary shadow-card-hover"
+                    : "text-on-surface-variant hover:bg-surface-container",
+                )}
+              >
+                <item.icon size={18} />
+                {item.label}
+              </Link>
+            </Fragment>
           ))}
         </nav>
 
