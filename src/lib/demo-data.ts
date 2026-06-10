@@ -194,6 +194,45 @@ export const DEMO_PARENT_ATTENDANCE: DemoAttRow[] = [
   { student_id: "demo-s1", date: new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10), status: "present" },
 ];
 
+// ─── Demo Lecture Viewers (quản trị video GV) ────────────────────────────────
+export interface DemoLectureViewer {
+  student_id: string;
+  full_name: string;
+  email: string;
+  class_name: string;
+  watch_seconds: number;
+  completed: boolean;
+  last_seen_at: string | null;
+}
+
+/** Phút tối thiểu mặc định cho bài giảng demo (ngưỡng cảnh báo "xem không đủ"). */
+export const DEMO_MIN_WATCH_MINUTES = 10;
+
+const hoursAgo = (n: number) => new Date(Date.now() - n * 3600_000).toISOString();
+
+/** Sinh danh sách người xem demo cho 1 bài giảng — số liệu cố định, đa dạng trạng thái. */
+export function demoLectureViewers(lectureId: string): DemoLectureViewer[] {
+  const classId = ["demo-l4", "demo-l5", "demo-l6"].includes(lectureId) ? CLASS_7B : CLASS_6A;
+  const className = classId === CLASS_7B ? "Lớp 7B — Luyện thi PET" : "Lớp 6A — Tiếng Anh giao tiếp";
+  // [giây đã xem, đã đánh dấu xong, giờ trước] — trộn đủ trạng thái: đủ / chưa đủ / chưa xem
+  const patterns: [number, boolean, number | null][] = [
+    [1260, true, 2], [930, true, 5], [720, false, 8], [280, false, 26],
+    [150, false, 50], [0, false, null], [840, true, 3], [610, false, 12],
+  ];
+  return (DEMO_STUDENTS[classId] ?? []).map((s, i) => {
+    const [watch_seconds, completed, hrs] = patterns[i % patterns.length];
+    return {
+      student_id: s.id,
+      full_name: s.full_name,
+      email: s.email,
+      class_name: className,
+      watch_seconds,
+      completed,
+      last_seen_at: hrs === null ? null : hoursAgo(hrs),
+    };
+  });
+}
+
 /** Một người dùng có phải đang ở chế độ xem thử không (id dạng "demo-..."). */
 export const isDemoId = (id: string) => id.startsWith("demo-");
 

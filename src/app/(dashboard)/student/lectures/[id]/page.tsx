@@ -7,6 +7,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { LectureView, type LectureDetail } from "@/components/lectures/LectureView";
 import { LectureComments } from "@/components/lectures/LectureComments";
 import { MarkWatched } from "@/components/lectures/MarkWatched";
+import { WatchTracker } from "@/components/lectures/WatchTracker";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +75,7 @@ export default async function StudentLecturePage({
           <div className="flex min-w-0 flex-col gap-md">
             <LectureView lecture={lecture as unknown as LectureDetail} />
             <MarkWatched lectureId={id} />
+            <WatchTracker lectureId={id} />
           </div>
 
           {/* Cột phải: comments (sticky khi desktop) */}

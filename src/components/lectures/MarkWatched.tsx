@@ -18,9 +18,9 @@ export function MarkWatched({ lectureId }: { lectureId: string }) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) { setReady(true); return; }
         const { data } = await supabase
-          .from("lecture_views").select("lecture_id")
+          .from("lecture_views").select("completed")
           .eq("lecture_id", lectureId).eq("student_id", user.id).maybeSingle();
-        setWatched(!!data);
+        setWatched(!!data?.completed);
       } catch { /* noop */ } finally { setReady(true); }
     })();
   }, [lectureId]);
@@ -32,11 +32,14 @@ export function MarkWatched({ lectureId }: { lectureId: string }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       if (watched) {
-        await supabase.from("lecture_views").delete().eq("lecture_id", lectureId).eq("student_id", user.id);
+        // Bỏ đánh dấu nhưng GIỮ thời gian xem đã tích luỹ (không delete)
+        await supabase.from("lecture_views")
+          .update({ completed: false })
+          .eq("lecture_id", lectureId).eq("student_id", user.id);
         setWatched(false);
       } else {
         await supabase.from("lecture_views").upsert(
-          { lecture_id: lectureId, student_id: user.id },
+          { lecture_id: lectureId, student_id: user.id, completed: true },
           { onConflict: "lecture_id,student_id" },
         );
         await supabase.from("student_logs").insert({ student_id: user.id, type: "lecture" });
