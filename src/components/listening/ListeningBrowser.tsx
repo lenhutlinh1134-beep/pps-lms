@@ -5,12 +5,14 @@ import Link from "next/link";
 import { Search, Play, Headphones, X, SlidersHorizontal } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
+import type { CEFRLevel } from "@/lib/listening";
 
 export interface TopicMeta {
   id: string;
   emoji: string;
   name: string;
   count: number;
+  level: CEFRLevel;
 }
 
 const COVERS = [
@@ -28,20 +30,43 @@ function getLengthLabel(count: number): LengthFilter {
   return "long";
 }
 
-export function ListeningBrowser({ topics }: { topics: TopicMeta[] }) {
+const CEFR_COLORS: Record<CEFRLevel, string> = {
+  A1: "bg-[#e8f5e9] text-[#2e7d32]",
+  A2: "bg-[#e3f2fd] text-[#1565c0]",
+  B1: "bg-primary-fixed text-primary",
+  B2: "bg-secondary-fixed text-secondary",
+  C1: "bg-[#fff3e0] text-[#e65100]",
+  C2: "bg-[#fce4ec] text-[#880e4f]",
+};
+
+interface Props {
+  topics: TopicMeta[];
+  /** Nếu truyền vào, hiện banner "Lớp bạn học level X" và lọc mặc định theo level đó */
+  classLevel?: CEFRLevel;
+}
+
+export function ListeningBrowser({ topics, classLevel }: Props) {
   const [q, setQ] = useState("");
   const [length, setLength] = useState<LengthFilter>("all");
+  const [levelFilter, setLevelFilter] = useState<CEFRLevel | "all">(classLevel ?? "all");
 
   const filtered = useMemo(() => {
     const kw = q.trim().toLowerCase();
     return topics.filter((t) => {
+      if (levelFilter !== "all" && t.level !== levelFilter) return false;
       if (length !== "all" && getLengthLabel(t.count) !== length) return false;
       if (kw && !t.name.toLowerCase().includes(kw)) return false;
       return true;
     });
-  }, [topics, q, length]);
+  }, [topics, q, length, levelFilter]);
 
-  const hasFilter = q || length !== "all";
+  const hasFilter = q || length !== "all" || levelFilter !== "all";
+
+  // Các level thực sự có trong danh sách topics
+  const availableLevels = useMemo(
+    () => [...new Set(topics.map((t) => t.level))].sort(),
+    [topics],
+  );
 
   if (topics.length === 0) {
     return (
@@ -55,6 +80,26 @@ export function ListeningBrowser({ topics }: { topics: TopicMeta[] }) {
 
   return (
     <div className="flex flex-col gap-md">
+      {/* Banner cấp độ lớp */}
+      {classLevel && (
+        <div className="flex items-center gap-sm rounded-xl bg-primary-fixed px-md py-sm">
+          <span className={`rounded-full px-2.5 py-1 text-label-sm font-bold ${CEFR_COLORS[classLevel]}`}>
+            {classLevel}
+          </span>
+          <p className="text-body-md font-semibold text-primary">
+            Lớp bạn đang học cấp độ {classLevel} — chỉ hiện bài nghe phù hợp
+          </p>
+          {levelFilter !== "all" && (
+            <button
+              onClick={() => setLevelFilter("all")}
+              className="ml-auto text-label-sm font-semibold text-primary underline hover:no-underline"
+            >
+              Xem tất cả
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Thanh search + filter */}
       <div className="flex flex-col gap-sm sm:flex-row sm:items-center">
         {/* Search */}
@@ -76,7 +121,7 @@ export function ListeningBrowser({ topics }: { topics: TopicMeta[] }) {
           )}
         </div>
 
-        {/* Filter chips: độ dài */}
+        {/* Filter chip: độ dài */}
         <div className="flex items-center gap-1 rounded-xl border border-outline-variant bg-surface-container p-1">
           <SlidersHorizontal size={16} className="ml-2 shrink-0 text-on-surface-variant" />
           {([
@@ -101,6 +146,38 @@ export function ListeningBrowser({ topics }: { topics: TopicMeta[] }) {
         </div>
       </div>
 
+      {/* Filter CEFR level — chỉ hiện khi không có classLevel (GV hoặc xem all) */}
+      {!classLevel && availableLevels.length > 1 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-label-sm text-on-surface-variant">Cấp độ:</span>
+          <button
+            onClick={() => setLevelFilter("all")}
+            className={cn(
+              "rounded-full px-3 py-1 text-label-sm font-semibold transition-colors",
+              levelFilter === "all"
+                ? "bg-primary text-on-primary"
+                : "border border-outline-variant text-on-surface-variant hover:text-on-surface",
+            )}
+          >
+            Tất cả
+          </button>
+          {availableLevels.map((lv) => (
+            <button
+              key={lv}
+              onClick={() => setLevelFilter(lv)}
+              className={cn(
+                "rounded-full px-3 py-1 text-label-sm font-semibold transition-colors",
+                levelFilter === lv
+                  ? CEFR_COLORS[lv] + " ring-2 ring-offset-1 ring-current"
+                  : "border border-outline-variant text-on-surface-variant hover:text-on-surface",
+              )}
+            >
+              {lv}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Kết quả */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-sm rounded-xl bg-surface-container px-4 py-xl text-center">
@@ -109,7 +186,7 @@ export function ListeningBrowser({ topics }: { topics: TopicMeta[] }) {
           <p className="text-body-md text-on-surface-variant">
             Thử từ khoá khác hoặc{" "}
             <button
-              onClick={() => { setQ(""); setLength("all"); }}
+              onClick={() => { setQ(""); setLength("all"); setLevelFilter(classLevel ?? "all"); }}
               className="font-semibold text-primary hover:underline"
             >
               xoá bộ lọc
@@ -123,7 +200,7 @@ export function ListeningBrowser({ topics }: { topics: TopicMeta[] }) {
           </p>
 
           <div className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((t, i) => {
+            {filtered.map((t) => {
               const cover = COVERS[topics.indexOf(t) % COVERS.length];
               const lengthLabel =
                 t.count <= 5 ? { text: "Ngắn", cls: "bg-tertiary-fixed text-on-tertiary-fixed" }
@@ -138,9 +215,9 @@ export function ListeningBrowser({ topics }: { topics: TopicMeta[] }) {
                       <span className="text-5xl drop-shadow-sm transition-transform duration-300 group-hover:scale-110">
                         {t.emoji || "🎧"}
                       </span>
-                      {/* Badge số thứ tự */}
-                      <span className="absolute left-3 top-3 rounded-full bg-black/30 px-2.5 py-1 text-label-sm font-semibold text-white backdrop-blur-sm">
-                        Bài {topics.indexOf(t) + 1}
+                      {/* Badge CEFR level */}
+                      <span className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-label-sm font-bold ${CEFR_COLORS[t.level]}`}>
+                        {t.level}
                       </span>
                       {/* Badge độ dài */}
                       <span className={`absolute right-3 top-3 rounded-full px-2.5 py-1 text-label-sm font-semibold ${lengthLabel.cls}`}>

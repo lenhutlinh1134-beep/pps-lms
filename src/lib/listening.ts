@@ -1,10 +1,24 @@
 // Helper dùng chung cho tính năng "Học từ kết nối" (an toàn cho client — không kèm dữ liệu).
 
+export type CEFRLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+
+export const CEFR_LEVELS: CEFRLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+export const CEFR_LABELS: Record<CEFRLevel, string> = {
+  A1: "A1 · Sơ cấp",
+  A2: "A2 · Cơ bản",
+  B1: "B1 · Trung cấp",
+  B2: "B2 · Trung cao",
+  C1: "C1 · Cao cấp",
+  C2: "C2 · Thành thạo",
+};
+
 export interface ListeningTopic {
   id: string;
   emoji: string;
   name: string;
   vi: string;
+  level: CEFRLevel;
   paras: string[];
   vi_paras: string[];
 }

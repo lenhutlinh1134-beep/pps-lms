@@ -22,6 +22,7 @@ export function NewClassForm() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [year, setYear] = useState("");
+  const [level, setLevel] = useState("B1");
   const [schoolMode, setSchoolMode] = useState<"existing" | "new">("new");
   const [schoolId, setSchoolId] = useState("");
   const [newSchoolName, setNewSchoolName] = useState("");
@@ -82,6 +83,7 @@ export function NewClassForm() {
         p_school_id: schoolMode === "existing" ? schoolId || null : null,
         p_school_name: schoolMode === "new" ? newSchoolName.trim() : null,
         p_custom: custom,
+        p_level: level,
       });
       if (rpcError) {
         setError(rpcError.message);
@@ -116,6 +118,21 @@ export function NewClassForm() {
           value={year}
           onChange={(e) => setYear(e.target.value)}
         />
+
+        <div>
+          <label className="mb-1 block text-label-md text-on-surface-variant">Cấp độ CEFR</label>
+          <Select name="level" value={level} onChange={(e) => setLevel(e.target.value)}>
+            <option value="A1">A1 · Sơ cấp</option>
+            <option value="A2">A2 · Cơ bản</option>
+            <option value="B1">B1 · Trung cấp</option>
+            <option value="B2">B2 · Trung cao</option>
+            <option value="C1">C1 · Cao cấp</option>
+            <option value="C2">C2 · Thành thạo</option>
+          </Select>
+          <p className="mt-1 text-label-sm text-on-surface-variant">
+            Học sinh trong lớp sẽ chỉ thấy bài luyện nghe đúng cấp độ này.
+          </p>
+        </div>
 
         {/* Trường */}
         <div>

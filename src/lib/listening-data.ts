@@ -13,5 +13,6 @@ export const topicsMeta = listeningTopics.map((t) => ({
   id: t.id,
   emoji: t.emoji,
   name: t.name,
+  level: t.level,
   count: t.paras.length,
 }));
