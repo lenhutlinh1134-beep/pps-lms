@@ -65,6 +65,7 @@ const NAV: Record<Role, NavItem[]> = {
     { label: "Tổng quan", href: "/parent", icon: Home },
     { label: "Con của tôi", href: "/parent/children", icon: Baby },
     { label: "Lịch học", href: "/parent/schedule", icon: Calendar },
+    { label: "Điểm danh", href: "/parent/attendance", icon: ClipboardCheck },
     { label: "Tiến độ", href: "/parent/progress", icon: BarChart3 },
     { label: "Nhận xét", href: "/parent/notes", icon: MessageSquare },
     { label: "Cảnh báo", href: "/parent/alerts", icon: AlertTriangle },

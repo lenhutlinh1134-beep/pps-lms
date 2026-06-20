@@ -19,18 +19,26 @@ interface QuizPayload {
   questions: Question[];
 }
 
+interface ExistingSubmission {
+  score: number | null;
+  payload: { answers: (number | null)[] } | null;
+  feedback: string | null;
+}
+
 interface QuizPlayerProps {
   assignmentId: string;
   title: string;
   payload: QuizPayload;
+  existingSubmission?: ExistingSubmission | null;
   onDone?: (score: number) => void;
 }
 
-export function QuizPlayer({ assignmentId, title, payload, onDone }: QuizPlayerProps) {
+export function QuizPlayer({ assignmentId, title, payload, existingSubmission, onDone }: QuizPlayerProps) {
   const questions = payload.questions ?? [];
+  const prevAnswers = existingSubmission?.payload?.answers ?? null;
   const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState<(number | null)[]>(Array(questions.length).fill(null));
-  const [submitted, setSubmitted] = useState(false);
+  const [answers, setAnswers] = useState<(number | null)[]>(prevAnswers ?? Array(questions.length).fill(null));
+  const [submitted, setSubmitted] = useState(!!existingSubmission?.score);
   const [saving, setSaving] = useState(false);
 
   const q = questions[current];
@@ -78,7 +86,8 @@ export function QuizPlayer({ assignmentId, title, payload, onDone }: QuizPlayerP
 
   if (submitted) {
     const correct = answers.filter((a, i) => a === questions[i].correct_index).length;
-    const score = Math.round((correct / questions.length) * 100);
+    const score = existingSubmission?.score ?? Math.round((correct / questions.length) * 100);
+    const teacherFeedback = existingSubmission?.feedback ?? null;
     return (
       <Card className="flex flex-col items-center gap-lg py-xl text-center">
         <span className="flex h-20 w-20 items-center justify-center rounded-full bg-primary-fixed text-primary">
@@ -89,6 +98,13 @@ export function QuizPlayer({ assignmentId, title, payload, onDone }: QuizPlayerP
           <p className="mt-xs text-body-lg">{correct}/{questions.length} câu đúng</p>
           <p className="mt-sm text-body-md text-on-surface-variant">{title}</p>
         </div>
+        {/* Nhận xét của giáo viên */}
+        {teacherFeedback && (
+          <div className="w-full rounded-xl border border-primary/30 bg-primary-fixed/20 px-4 py-3 text-left">
+            <p className="mb-1 text-label-sm font-semibold text-primary">💬 Nhận xét từ giáo viên</p>
+            <p className="text-body-md">{teacherFeedback}</p>
+          </div>
+        )}
         {/* Tóm tắt từng câu */}
         <div className="w-full flex flex-col gap-sm text-left">
           {questions.map((q, i) => {

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DashboardShell } from "@/components/DashboardShell";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
+import { SubmissionFeedbackForm } from "@/components/exercises/SubmissionFeedbackForm";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ interface StudentResult {
   score: number | null;
   submitted_at: string | null;
   answers: (number | null)[] | null;
+  feedback: string | null;
 }
 
 interface Question {
@@ -55,13 +57,18 @@ export default async function AssignmentResultPage({
   // Bài nộp
   const { data: subs } = await supabase
     .from("submissions")
-    .select("student_id, score, submitted_at, payload")
+    .select("student_id, score, submitted_at, payload, feedback")
     .eq("assignment_id", id);
 
   const subMap = new Map(
     (subs ?? []).map((s) => [
       s.student_id,
-      { score: s.score as number, submitted_at: s.submitted_at as string, answers: (s.payload as { answers: number[] })?.answers ?? null },
+      {
+        score: s.score as number,
+        submitted_at: s.submitted_at as string,
+        answers: (s.payload as { answers: number[] })?.answers ?? null,
+        feedback: (s.feedback as string | null) ?? null,
+      },
     ]),
   );
 
@@ -74,6 +81,7 @@ export default async function AssignmentResultPage({
       score: sub?.score ?? null,
       submitted_at: sub?.submitted_at ?? null,
       answers: sub?.answers ?? null,
+      feedback: sub?.feedback ?? null,
     };
   });
 
@@ -147,39 +155,55 @@ export default async function AssignmentResultPage({
                     r.score! >= 50 ? "text-secondary" : "text-error";
 
                   return (
-                    <Card key={r.student_id} padding="md" className="flex items-center gap-md">
-                      <span
-                        className={cn(
-                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-display font-bold text-body-md",
-                          done ? "bg-tertiary-fixed text-tertiary" : "bg-surface-container text-outline",
-                        )}
-                      >
-                        {done ? <Trophy size={18} /> : <Clock size={18} />}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-body-md font-semibold">
-                          {r.full_name ?? "Học sinh"}
-                        </p>
-                        {r.submitted_at && (
-                          <p className="text-label-md text-on-surface-variant">
-                            Nộp lúc {new Date(r.submitted_at).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                          </p>
-                        )}
-                      </div>
-                      <div className="shrink-0 text-right">
-                        {done ? (
-                          <>
-                            <p className={cn("text-body-lg font-bold", scoreColor)}>{r.score}%</p>
-                            {r.answers && (
-                              <p className="text-label-sm text-on-surface-variant">
-                                {r.answers.filter((a, i) => a === questions[i]?.correct_index).length}/{questions.length} đúng
-                              </p>
+                    <Card key={r.student_id} padding="md">
+                      <div className="flex items-center gap-md">
+                        <span
+                          className={cn(
+                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-display font-bold text-body-md",
+                            done ? "bg-tertiary-fixed text-tertiary" : "bg-surface-container text-outline",
+                          )}
+                        >
+                          {done ? <Trophy size={18} /> : <Clock size={18} />}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="text-body-md font-semibold">
+                              {r.full_name ?? "Học sinh"}
+                            </p>
+                            {done && r.feedback && (
+                              <span className="rounded-full bg-primary-fixed px-2 py-0.5 text-label-xs text-on-primary-fixed">
+                                Đã nhận xét
+                              </span>
                             )}
-                          </>
-                        ) : (
-                          <span className="text-label-md text-on-surface-variant">Chưa nộp</span>
-                        )}
+                          </div>
+                          {r.submitted_at && (
+                            <p className="text-label-md text-on-surface-variant">
+                              Nộp lúc {new Date(r.submitted_at).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          )}
+                        </div>
+                        <div className="shrink-0 text-right">
+                          {done ? (
+                            <>
+                              <p className={cn("text-body-lg font-bold", scoreColor)}>{r.score}%</p>
+                              {r.answers && (
+                                <p className="text-label-sm text-on-surface-variant">
+                                  {r.answers.filter((a, i) => a === questions[i]?.correct_index).length}/{questions.length} đúng
+                                </p>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-label-md text-on-surface-variant">Chưa nộp</span>
+                          )}
+                        </div>
                       </div>
+                      {done && (
+                        <SubmissionFeedbackForm
+                          assignmentId={id}
+                          studentId={r.student_id}
+                          initialFeedback={r.feedback}
+                        />
+                      )}
                     </Card>
                   );
                 })}

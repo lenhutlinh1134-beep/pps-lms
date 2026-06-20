@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CheckSquare, Square, BookOpen, AlertCircle } from "lucide-react";
+import { CheckSquare, Square, BookOpen, AlertCircle, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Input";
@@ -40,6 +40,8 @@ export function NewAssignmentForm({ classes, questions }: { classes: ClassItem[]
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [classId, setClassId] = useState(classes[0]?.id ?? "");
+  const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,6 +88,8 @@ export function NewAssignmentForm({ classes, questions }: { classes: ClassItem[]
         class_id: classId,
         type: "quiz",
         payload,
+        description: description.trim() || null,
+        due_date: dueDate || null,
       });
       if (err) { setError(err.message); return; }
       router.push("/teacher/exercises");
@@ -126,6 +130,33 @@ export function NewAssignmentForm({ classes, questions }: { classes: ClassItem[]
               ))
             )}
           </Select>
+        </div>
+        <div className="grid grid-cols-1 gap-md sm:grid-cols-2">
+          <div className="flex flex-col gap-1">
+            <label className="text-label-md font-medium text-on-surface-variant">
+              Mô tả <span className="text-label-sm font-normal">(tuỳ chọn)</span>
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Hướng dẫn hoặc lưu ý cho bài tập..."
+              rows={3}
+              className="w-full resize-none rounded-xl border border-outline-variant bg-surface px-4 py-3 text-body-md placeholder:text-on-surface-variant/60 focus:border-primary focus:outline-none"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-label-md font-medium text-on-surface-variant">
+              <span className="flex items-center gap-1">
+                <Calendar size={14} /> Hạn nộp bài <span className="text-label-sm font-normal">(tuỳ chọn)</span>
+              </span>
+            </label>
+            <input
+              type="datetime-local"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="h-14 w-full rounded-xl border border-outline-variant bg-surface px-4 text-body-md focus:border-primary focus:outline-none"
+            />
+          </div>
         </div>
       </Card>
 

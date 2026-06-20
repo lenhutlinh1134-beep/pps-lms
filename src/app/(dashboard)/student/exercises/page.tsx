@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ListChecks, ArrowRight, Trophy } from "lucide-react";
+import { ListChecks, ArrowRight, Trophy, Clock } from "lucide-react";
 import { requireRole } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { isDemoId, DEMO_STUDENT_ASSIGNMENTS, CLASS_6A } from "@/lib/demo-data";
@@ -14,6 +14,7 @@ interface AssignmentRow {
   title: string;
   class_id: string;
   created_at: string;
+  due_date: string | null;
   class: { name: string } | null;
   mySubmission: { score: number | null } | null;
 }
@@ -32,6 +33,7 @@ export default async function ExercisesPage() {
       title: a.title,
       class_id: a.class_id,
       created_at: a.created_at,
+      due_date: null,
       class: { name: a.class_name },
       mySubmission: a.score !== null ? { score: a.score } : null,
     }));
@@ -48,7 +50,7 @@ export default async function ExercisesPage() {
       if (classIds.length > 0) {
         const { data } = await supabase
           .from("assignments")
-          .select("id, title, class_id, created_at, class:classes(name)")
+          .select("id, title, class_id, created_at, due_date, class:classes(name)")
           .in("class_id", classIds)
           .order("created_at", { ascending: false });
 
@@ -97,16 +99,33 @@ export default async function ExercisesPage() {
               const done = a.mySubmission !== null;
               const score = a.mySubmission?.score;
               const className = (a.class as unknown as { name: string } | null)?.name;
+              const now = Date.now();
+              const dueMs = a.due_date ? new Date(a.due_date).getTime() : null;
+              const isOverdue = !done && dueMs !== null && dueMs < now;
+              const isUrgent = !done && !isOverdue && dueMs !== null && dueMs - now < 24 * 60 * 60 * 1000;
               return (
                 <Link key={a.id} href={`/student/exercises/${a.id}`}>
                   <Card interactive className="flex items-center gap-md">
-                    <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-md ${done ? "bg-tertiary-fixed text-tertiary" : "bg-primary-fixed text-primary"}`}>
+                    <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-md ${done ? "bg-tertiary-fixed text-tertiary" : isOverdue ? "bg-error-container text-on-error-container" : "bg-primary-fixed text-primary"}`}>
                       {done ? <Trophy size={24} /> : <ListChecks size={24} />}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <h3 className="truncate text-body-md font-semibold">{a.title}</h3>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="truncate text-body-md font-semibold">{a.title}</h3>
+                        {isOverdue && (
+                          <span className="shrink-0 rounded-full bg-error-container px-2 py-0.5 text-label-xs font-medium text-on-error-container">
+                            Đã hết hạn
+                          </span>
+                        )}
+                        {isUrgent && (
+                          <span className="shrink-0 flex items-center gap-0.5 rounded-full bg-secondary-fixed px-2 py-0.5 text-label-xs font-medium text-on-secondary-fixed">
+                            <Clock size={10} /> Sắp hết hạn
+                          </span>
+                        )}
+                      </div>
                       <p className="text-label-md text-on-surface-variant">
                         {className} · {new Date(a.created_at).toLocaleDateString("vi-VN")}
+                        {dueMs && ` · Hạn: ${new Date(dueMs).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" })}`}
                       </p>
                     </div>
                     <div className="shrink-0 text-right">

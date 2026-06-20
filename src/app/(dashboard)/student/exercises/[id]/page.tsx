@@ -35,6 +35,14 @@ export default async function ExerciseDetailPage({
 
   if (!data) notFound();
 
+  // Lấy bài nộp cũ (nếu có) để hiển thị feedback của GV
+  const { data: existing } = await supabase
+    .from("submissions")
+    .select("score, payload, feedback")
+    .eq("assignment_id", id)
+    .eq("student_id", profile.id)
+    .maybeSingle();
+
   return (
     <DashboardShell role="student" userName={profile.full_name || "Học sinh"}>
       <div className="mx-auto flex max-w-3xl flex-col gap-lg">
@@ -49,6 +57,7 @@ export default async function ExerciseDetailPage({
           assignmentId={data.id}
           title={data.title}
           payload={(data.payload as QuizPayload) ?? { questions: [] }}
+          existingSubmission={existing ?? null}
         />
       </div>
     </DashboardShell>

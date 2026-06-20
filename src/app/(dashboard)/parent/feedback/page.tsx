@@ -120,11 +120,11 @@ export default async function ParentFeedbackPage() {
       .eq("parent_id", profile.id);
     const childIds = (psData ?? []).map((d: { student_id: string }) => d.student_id);
 
-    // Lấy danh sách lớp của con (thông qua enrollments)
+    // Lấy danh sách lớp của con (thông qua class_students)
     const { data: classData } = childIds.length > 0
       ? await supabase
-          .from("enrollments")
-          .select(`class_id, student_id, profiles!enrollments_student_id_fkey(full_name), classes(id, name)`)
+          .from("class_students")
+          .select(`class_id, student_id, profiles!class_students_student_id_fkey(full_name), classes!class_students_class_id_fkey(id, name)`)
           .in("student_id", childIds)
       : { data: [] };
 
