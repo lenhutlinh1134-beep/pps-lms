@@ -1,4 +1,6 @@
 import { BarChart3, BookOpen, ClipboardCheck } from "lucide-react";
+import { AttendanceExportButton } from "@/components/teacher/AttendanceExportButton";
+import { AssignmentExportButton } from "@/components/teacher/AssignmentExportButton";
 import Link from "next/link";
 import { requireRole } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -348,6 +350,9 @@ export default async function ReportsPage({
             />
           ) : (
             <div className="flex flex-col gap-sm">
+              <div className="flex justify-end">
+                <AssignmentExportButton data={assignments} />
+              </div>
               {assignments.map(a => {
                 const submitRate = a.total_students > 0 ? Math.round(a.submitted / a.total_students * 100) : 0;
                 const passRate   = a.submitted > 0     ? Math.round(a.pass_count / a.submitted * 100)     : 0;
@@ -394,6 +399,9 @@ export default async function ReportsPage({
             />
           ) : (
             <div className="flex flex-col gap-sm">
+              <div className="flex justify-end">
+                <AttendanceExportButton data={classAttendance} />
+              </div>
               {classAttendance.map(c => {
                 const presentRate = c.total_records > 0 ? Math.round(c.present_count / c.total_records * 100) : 0;
                 const absentRate  = c.total_records > 0 ? Math.round(c.absent_count  / c.total_records * 100) : 0;
