@@ -1,4 +1,5 @@
-import { Users } from "lucide-react";
+import { Users, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { requireRole } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardShell } from "@/components/DashboardShell";
@@ -72,18 +73,19 @@ export default async function StaffPage() {
                     <th className="pb-md pr-lg text-label-md font-semibold text-on-surface-variant hidden md:table-cell">
                       Email
                     </th>
-                    <th className="pb-md text-label-md font-semibold text-on-surface-variant">
+                    <th className="pb-md pr-lg text-label-md font-semibold text-on-surface-variant">
                       Vai trò
                     </th>
+                    <th className="pb-md w-8" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant">
                   {teachers.map((teacher) => {
                     const initials = (teacher.full_name ?? "?").charAt(0).toUpperCase();
                     return (
-                      <tr key={teacher.id} className="hover:bg-surface-container transition-colors">
+                      <tr key={teacher.id} className="hover:bg-surface-container transition-colors cursor-pointer">
                         <td className="py-md pr-lg">
-                          <div className="flex items-center gap-sm">
+                          <Link href={`/manager/staff/${teacher.id}`} className="flex items-center gap-sm">
                             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-fixed font-display text-label-md font-bold text-on-primary-fixed">
                               {initials}
                             </span>
@@ -95,7 +97,7 @@ export default async function StaffPage() {
                                 {teacher.email ?? "—"}
                               </p>
                             </div>
-                          </div>
+                          </Link>
                         </td>
                         <td className="py-md pr-lg text-on-surface-variant hidden md:table-cell">
                           {teacher.email ?? "—"}
@@ -104,6 +106,11 @@ export default async function StaffPage() {
                           <span className="inline-flex items-center rounded-full bg-tertiary-fixed px-3 py-1 text-label-sm font-medium text-on-tertiary-fixed">
                             Giáo viên
                           </span>
+                        </td>
+                        <td className="py-md pl-md text-on-surface-variant">
+                          <Link href={`/manager/staff/${teacher.id}`}>
+                            <ChevronRight size={18} />
+                          </Link>
                         </td>
                       </tr>
                     );
