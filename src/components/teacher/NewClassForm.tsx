@@ -18,7 +18,7 @@ interface CustomField {
   value: string;
 }
 
-export function NewClassForm() {
+export function NewClassForm({ demo = false }: { demo?: boolean }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [year, setYear] = useState("");
@@ -96,6 +96,24 @@ export function NewClassForm() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (demo) {
+    return (
+      <div className="rounded-xl border border-secondary bg-secondary-fixed/30 px-6 py-8 text-center">
+        <p className="text-headline-sm font-semibold text-secondary">Chế độ xem thử</p>
+        <p className="mt-2 text-body-md text-on-surface-variant">
+          Tạo lớp thật cần tài khoản giáo viên thật.<br />
+          Đăng ký hoặc đăng nhập để sử dụng tính năng này.
+        </p>
+        <a
+          href="/login"
+          className="mt-4 inline-block rounded-xl bg-primary px-6 py-3 text-label-lg font-semibold text-on-primary hover:opacity-90"
+        >
+          Đăng nhập ngay
+        </a>
+      </div>
+    );
   }
 
   return (

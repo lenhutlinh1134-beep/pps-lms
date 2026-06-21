@@ -25,7 +25,7 @@ export default async function NewClassPage() {
           </p>
         </div>
 
-        <NewClassForm />
+        <NewClassForm demo={profile.id.startsWith("demo-")} />
       </div>
     </DashboardShell>
   );
