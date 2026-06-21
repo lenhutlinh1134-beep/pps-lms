@@ -158,7 +158,7 @@ export default async function TeacherStudentDetailPage({
             <div className="mx-auto mb-xs flex h-10 w-10 items-center justify-center rounded-full bg-secondary-fixed text-secondary">
               <BookOpen size={20} />
             </div>
-            <p className="font-display text-display-sm text-secondary">{avgScore !== null ? `${avgScore}/10` : "—"}</p>
+            <p className="font-display text-display-sm text-secondary">{avgScore !== null ? `${avgScore}%` : "—"}</p>
             <p className="text-label-md text-on-surface-variant">Điểm TB</p>
             <p className="text-label-sm text-on-surface-variant">{scoredSubs.length} bài</p>
           </Card>
@@ -231,8 +231,8 @@ export default async function TeacherStudentDetailPage({
                   const asgn = sub.assignments;
                   const scoreColor =
                     sub.score === null ? "text-on-surface-variant"
-                    : sub.score >= 8 ? "text-tertiary"
-                    : sub.score >= 5 ? "text-primary"
+                    : sub.score >= 80 ? "text-tertiary"
+                    : sub.score >= 50 ? "text-primary"
                     : "text-error";
                   return (
                     <Card key={i} padding="md" className="flex items-start gap-md">
@@ -249,7 +249,7 @@ export default async function TeacherStudentDetailPage({
                         )}
                       </div>
                       <span className={`shrink-0 font-display text-headline-sm font-bold ${scoreColor}`}>
-                        {sub.score !== null ? `${sub.score}/10` : "—"}
+                        {sub.score !== null ? `${sub.score}%` : "—"}
                       </span>
                     </Card>
                   );

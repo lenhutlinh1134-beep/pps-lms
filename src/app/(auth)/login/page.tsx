@@ -38,7 +38,9 @@ export default function LoginPage() {
         .select("role")
         .eq("id", user?.id)
         .single();
-      router.replace(`/${profile?.role ?? "student"}`);
+      const nextUrl = new URLSearchParams(window.location.search).get("next");
+      const dest = nextUrl && nextUrl.startsWith("/") ? nextUrl : `/${profile?.role ?? "student"}`;
+      router.replace(dest);
       router.refresh();
     } catch {
       setError("Không kết nối được máy chủ. Kiểm tra cấu hình Supabase (xem SETUP.md).");
@@ -51,9 +53,13 @@ export default function LoginPage() {
     setError(null);
     try {
       const supabase = createClient();
+      const nextParam = new URLSearchParams(window.location.search).get("next");
+      const callbackUrl = nextParam
+        ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextParam)}`
+        : `${window.location.origin}/auth/callback`;
       await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: { redirectTo: callbackUrl },
       });
     } catch {
       setError("Đăng nhập Google chưa sẵn sàng (cần bật Google provider trong Supabase).");

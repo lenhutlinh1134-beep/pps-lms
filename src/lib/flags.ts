@@ -26,7 +26,7 @@ export interface StudentMetrics {
   listensWeek: number;
   /** số ngày kể từ lần hoạt động gần nhất */
   daysSinceActive: number;
-  /** điểm trung bình 0–100 (null nếu chưa có bài chấm điểm) */
+  /** điểm trung bình 0–1 (từ student_logs.score, null nếu chưa có bài chấm điểm) */
   avgScore: number | null;
 }
 
@@ -35,7 +35,7 @@ export const FLAG_THRESHOLDS = {
   durationRatio: 0.3, // < 30% thời lượng yêu cầu
   minListensWeek: 3, // < 3 bài nghe/tuần
   inactiveDays: 7, // không hoạt động > 7 ngày
-  minAvgScore: 50, // điểm TB < 50%
+  minAvgScore: 0.5, // điểm TB < 50% (student_logs.score lưu dạng 0–1)
 } as const;
 
 /** Tính danh sách cờ cảnh báo cho 1 học sinh từ số liệu đã tổng hợp. */
@@ -78,7 +78,7 @@ export function computeFlags(m: StudentMetrics): Flag[] {
       key: "progress",
       severity: "warn",
       label: "Tiến độ thấp",
-      detail: `Điểm trung bình ${Math.round(m.avgScore)}%.`,
+      detail: `Điểm trung bình ${Math.round(m.avgScore * 100)}%.`,
     });
   }
 
