@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DashboardShell } from "@/components/DashboardShell";
 import { ClassManager, type ClassTab } from "@/components/teacher/ClassManager";
 import { ClassAnnouncementPanel, type AnnouncementItem } from "@/components/teacher/ClassAnnouncementPanel";
+import { InviteCodeCard } from "@/components/teacher/InviteCodeCard";
 import { isDemoId, demoClass, demoStudents } from "@/lib/demo-data";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +34,7 @@ export default async function ClassDetailPage({
   let schoolName: string | null | undefined = null;
   let students: Student[] = [];
   let announcements: AnnouncementItem[] = [];
+  let inviteCode: string | null = null;
   let found = false;
 
   if (demo) {
@@ -50,13 +52,13 @@ export default async function ClassDetailPage({
     try {
       const supabase = await createClient();
       const [classRes, studentsRes, announcementsRes] = await Promise.all([
-        supabase.from("classes").select("name, year, level, school:schools(name)").eq("id", id).single(),
+        supabase.from("classes").select("name, year, level, invite_code, school:schools(name)").eq("id", id).single(),
         supabase.from("class_students").select("student:profiles(id, full_name, email)").eq("class_id", id),
         supabase.from("class_announcements").select("id, content, created_at").eq("class_id", id).order("created_at", { ascending: false }).limit(50),
       ]);
       if (classRes.data) {
-        const c = classRes.data as unknown as { name: string; year: string | null; level: string | null; school: { name: string } | { name: string }[] | null };
-        name = c.name; year = c.year; level = c.level ?? null;
+        const c = classRes.data as unknown as { name: string; year: string | null; level: string | null; invite_code: string | null; school: { name: string } | { name: string }[] | null };
+        name = c.name; year = c.year; level = c.level ?? null; inviteCode = c.invite_code;
         schoolName = Array.isArray(c.school) ? c.school[0]?.name : c.school?.name;
         const rows = (studentsRes.data ?? []) as unknown as Array<{ student: Student | Student[] | null }>;
         students = rows.flatMap((r) => (Array.isArray(r.student) ? r.student : r.student ? [r.student] : []));
@@ -90,6 +92,7 @@ export default async function ClassDetailPage({
           </div>
         </div>
 
+        {!demo && <InviteCodeCard classId={id} initialCode={inviteCode} />}
         <ClassManager classId={id} initialStudents={students} demo={demo} initialTab={initialTab} />
         <ClassAnnouncementPanel classId={id} initialItems={announcements} demo={demo} />
       </div>
