@@ -4,8 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Users, ClipboardCheck, MessageSquare, UserPlus, Trash2, Mail, Save,
   Check, X, Clock, Send, AlertTriangle, Headphones, Ban, TrendingDown,
-  History, UserCog,
+  History, UserCog, BarChart2,
 } from "lucide-react";
+import { ClassStatsTab } from "./ClassStatsTab";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -18,7 +19,7 @@ import { cn } from "@/lib/utils";
 interface Student { id: string; full_name: string | null; email: string | null }
 interface Note { id: string; student_id: string; note: string; created_at: string }
 type AttStatus = "present" | "absent" | "late";
-export type ClassTab = "students" | "attendance" | "history" | "notes" | "flags" | "teachers";
+export type ClassTab = "students" | "attendance" | "history" | "notes" | "flags" | "teachers" | "stats";
 type Tab = ClassTab;
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -59,7 +60,7 @@ export function ClassManager({
     <div className="flex flex-col gap-lg">
       {/* Tabs */}
       <div className="flex gap-sm overflow-x-auto">
-        {([["students", "Học sinh", Users], ["attendance", "Điểm danh", ClipboardCheck], ["history", "Lịch sử điểm danh", History], ["notes", "Nhận xét", MessageSquare], ["flags", "Cảnh báo", AlertTriangle], ["teachers", "Giáo viên", UserCog]] as [Tab, string, typeof Users][]).map(
+        {([["stats", "Thống kê", BarChart2], ["students", "Học sinh", Users], ["attendance", "Điểm danh", ClipboardCheck], ["history", "Lịch sử điểm danh", History], ["notes", "Nhận xét", MessageSquare], ["flags", "Cảnh báo", AlertTriangle], ["teachers", "Giáo viên", UserCog]] as [Tab, string, typeof Users][]).map(
           ([t, label, Icon]) => (
             <button
               key={t}
@@ -75,6 +76,7 @@ export function ClassManager({
         )}
       </div>
 
+      {tab === "stats" && <ClassStatsTab classId={classId} demo={demo} totalStudents={students.length} />}
       {tab === "students" && (
         <StudentsTab classId={classId} students={students} demo={demo}
           onChange={refreshStudents} onAddLocal={addLocal} onRemoveLocal={removeLocal} />

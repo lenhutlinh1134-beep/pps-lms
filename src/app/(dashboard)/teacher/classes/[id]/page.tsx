@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 interface Student { id: string; full_name: string | null; email: string | null }
 
-const CLASS_TABS: ClassTab[] = ["students", "attendance", "history", "notes", "flags", "teachers"];
+const CLASS_TABS: ClassTab[] = ["stats", "students", "attendance", "history", "notes", "flags", "teachers"];
 
 export default async function ClassDetailPage({
   params,
