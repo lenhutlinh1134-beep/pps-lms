@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Activity, Eye, Headphones, Clock, TrendingUp, Users, Wifi, WifiOff, RefreshCw, AlertTriangle, Flag } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/Card";
@@ -265,7 +266,9 @@ export function MonitorRealtimeClient({
 
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-body-md font-semibold">{s.student_name ?? "(Chưa có tên)"}</p>
+                        <Link href={`/teacher/students/${s.student_id}`} className="text-body-md font-semibold hover:text-primary hover:underline">
+                          {s.student_name ?? "(Chưa có tên)"}
+                        </Link>
                         {s.is_online ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-tertiary-fixed px-2 py-0.5 text-label-sm font-medium text-on-tertiary-fixed">
                             <Wifi size={10} /> Online
