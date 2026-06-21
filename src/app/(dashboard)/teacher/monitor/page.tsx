@@ -5,6 +5,7 @@ import {
   MonitorRealtimeClient,
   type StudentActivity,
   type LectureStats,
+  type StudentFlag,
 } from "@/components/teacher/MonitorRealtimeClient";
 
 export const dynamic = "force-dynamic";
@@ -109,6 +110,24 @@ export default async function MonitorPage() {
           return b.last_active.localeCompare(a.last_active);
         });
     }
+
+    // Weekly metrics cho Flag Engine
+    const { data: weeklyMetrics } = await supabase.rpc("get_all_my_students_metrics");
+    type WeeklyMetric = { student_id: string; study_minutes_week: number; listens_week: number; days_since_active: number; avg_score: number | null };
+    const metricsMap = new Map<string, WeeklyMetric>(
+      ((weeklyMetrics ?? []) as WeeklyMetric[]).map((m) => [m.student_id, m])
+    );
+
+    students = students.map((s) => {
+      const m = metricsMap.get(s.student_id);
+      if (!m) return s;
+      const flags: StudentFlag[] = [];
+      if (m.days_since_active > 7) flags.push({ type: "inactive", label: "Không học 7+ ngày", color: "red" });
+      if (m.listens_week < 3) flags.push({ type: "low_listening", label: "Ít luyện nghe", color: "orange" });
+      if (m.study_minutes_week < 30) flags.push({ type: "low_study", label: "Học < 30 phút/tuần", color: "orange" });
+      if (m.avg_score !== null && m.avg_score < 5) flags.push({ type: "low_score", label: "Điểm TB thấp", color: "yellow" });
+      return { ...s, flags, study_minutes_week: m.study_minutes_week, listens_week: m.listens_week };
+    });
 
     const { data: lectures } = await supabase
       .from("lectures")

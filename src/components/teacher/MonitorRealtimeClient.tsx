@@ -1,11 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Activity, Eye, Headphones, Clock, TrendingUp, Users, Wifi, WifiOff, RefreshCw } from "lucide-react";
+import { Activity, Eye, Headphones, Clock, TrendingUp, Users, Wifi, WifiOff, RefreshCw, AlertTriangle, Flag } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
+
+export interface StudentFlag {
+  type: "inactive" | "low_listening" | "low_study" | "low_score";
+  label: string;
+  color: "red" | "orange" | "yellow";
+}
 
 export interface StudentActivity {
   student_id: string;
@@ -15,6 +21,9 @@ export interface StudentActivity {
   listens_today: number;
   last_active: string | null;
   is_online: boolean;
+  flags?: StudentFlag[];
+  study_minutes_week?: number;
+  listens_week?: number;
 }
 
 export interface LectureStats {
@@ -129,6 +138,13 @@ export function MonitorRealtimeClient({
     };
   }, [studentIds]);
 
+  const flagColors: Record<string, string> = {
+    red: "bg-error-container text-on-error-container",
+    orange: "bg-secondary-fixed text-on-secondary-fixed",
+    yellow: "bg-primary-fixed text-on-primary-fixed",
+  };
+
+  const studentsWithFlags = students.filter((s) => s.flags && s.flags.length > 0);
   const totalOnline = students.filter((s) => s.is_online).length;
   const activeToday = students.filter(
     (s) => s.study_minutes_today > 0 || s.listens_today > 0
@@ -184,6 +200,35 @@ export function MonitorRealtimeClient({
         </Card>
       </div>
 
+      {/* Cảnh báo học sinh cần chú ý */}
+      {studentsWithFlags.length > 0 && (
+        <Card padding="md" className="border border-error-container bg-error-container/30">
+          <h2 className="mb-md flex items-center gap-2 text-headline-sm text-error">
+            <Flag size={18} /> {studentsWithFlags.length} học sinh cần chú ý
+          </h2>
+          <div className="flex flex-col gap-sm">
+            {studentsWithFlags.map((s) => (
+              <div key={s.student_id} className="flex flex-wrap items-center gap-sm rounded-lg bg-surface-container-lowest p-sm">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-fixed font-display text-label-md font-bold text-on-primary-fixed">
+                  {(s.student_name ?? "?").charAt(0).toUpperCase()}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-body-md font-semibold">{s.student_name}</p>
+                  <p className="text-label-sm text-on-surface-variant">{s.class_name}</p>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {s.flags?.map((f) => (
+                    <span key={f.type} className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-label-sm font-medium", flagColors[f.color])}>
+                      <AlertTriangle size={10} /> {f.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 gap-lg lg:grid-cols-[1fr_340px]">
         {/* Bảng học sinh */}
         <section className="flex flex-col gap-sm">
@@ -230,6 +275,11 @@ export function MonitorRealtimeClient({
                             <WifiOff size={10} /> {timeAgo(s.last_active)}
                           </span>
                         )}
+                        {s.flags?.map((f) => (
+                          <span key={f.type} className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-label-sm font-medium", flagColors[f.color])}>
+                            <AlertTriangle size={10} /> {f.label}
+                          </span>
+                        ))}
                       </div>
                       <p className="text-label-sm text-on-surface-variant">{s.class_name}</p>
                     </div>
