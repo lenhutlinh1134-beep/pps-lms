@@ -1,6 +1,7 @@
 import { BarChart3, BookOpen, ClipboardCheck } from "lucide-react";
 import { AttendanceExportButton } from "@/components/teacher/AttendanceExportButton";
 import { AssignmentExportButton } from "@/components/teacher/AssignmentExportButton";
+import { SyncQlhsButton } from "@/components/teacher/SyncQlhsButton";
 import Link from "next/link";
 import { requireRole } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -239,11 +240,14 @@ export default async function ReportsPage({
       <div className="mx-auto flex max-w-5xl flex-col gap-lg">
 
         {/* Header */}
-        <div>
-          <h1 className="text-display-lg">Báo cáo & Thống kê</h1>
-          <p className="mt-xs text-body-lg text-on-surface-variant">
-            Theo dõi tiến trình học sinh, kết quả bài tập và điểm danh.
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-md">
+          <div>
+            <h1 className="text-display-lg">Báo cáo & Thống kê</h1>
+            <p className="mt-xs text-body-lg text-on-surface-variant">
+              Theo dõi tiến trình học sinh, kết quả bài tập và điểm danh.
+            </p>
+          </div>
+          <SyncQlhsButton />
         </div>
 
         {/* Tab navigation */}
