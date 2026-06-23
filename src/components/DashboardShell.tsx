@@ -8,6 +8,7 @@ import {
   Users, Video, ClipboardCheck, BarChart3, Baby, MessageSquare, BookMarked,
   Activity, MessageCircle, Calendar, Library, Building2, FolderOpen, Settings,
   AlertTriangle, MessageSquarePlus, Newspaper, CalendarDays, CalendarOff, Database,
+  PenLine,
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -25,6 +26,7 @@ interface NavItem {
 const NAV: Record<Role, NavItem[]> = {
   student: [
     { label: "Tổng quan",   href: "/student",              icon: Home },
+    { label: "Luyện đề thi", href: "/student/exams",        icon: PenLine },
     { label: "Luyện nghe",  href: "/student/listening",    icon: Headphones },
     { label: "Bài giảng",   href: "/student/lectures",     icon: BookOpen },
     { label: "Bài tập",     href: "/student/exercises",    icon: ListChecks },
@@ -43,6 +45,7 @@ const NAV: Record<Role, NavItem[]> = {
     { label: "Bài tập",       href: "/teacher/exercises",      icon: BookMarked },
     { label: "Kho tài liệu",  href: "/teacher/library",        icon: FolderOpen },
     { label: "Ngân hàng ĐT",  href: "/teacher/question-bank",  icon: Database },
+    { label: "Đề thi online", href: "/teacher/exams",           icon: PenLine },
     // ── Theo dõi ──
     { label: "Giám sát",      href: "/teacher/monitor",        icon: Activity,          groupLabel: "Theo dõi" },
     { label: "Báo cáo",       href: "/teacher/reports",        icon: BarChart3 },

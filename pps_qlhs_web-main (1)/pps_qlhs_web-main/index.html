@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hệ Thống Tra Cứu Học Tập - PPS Vietnam</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="logo.png">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    :root {
+      --accent: #f15a24;        
+      --accent-dark: #0d2b4d;   
+      --accent-soft: #fff3ed;
+      --success: #0f9d58;
+      --danger: #d93025;
+      --warning: #b45309;
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --text: #1f2937;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --radius: 12px;
+      --shadow: 0 4px 15px rgba(0,0,0,0.05);
+      --sidebar-width: 250px;
+    }
+    body { font-family: 'Be Vietnam Pro', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; margin: 0; overflow-x: hidden; }
+    * { box-sizing: border-box; }
+    
+    #login-section { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .login-card { background: var(--card); border-radius: 20px; box-shadow: var(--shadow); padding: 40px 30px; width: 100%; max-width: 400px; border: 1px solid var(--border); }
+    .login-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; justify-content: center; }
+    .login-logo img { height: 50px; }
+    .login-logo h1 { font-size: 22px; font-weight: 700; color: var(--accent); margin: 0; }
+    .form-group { margin-bottom: 18px; }
+    .form-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: block; }
+    .form-control, .form-select { border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 14px; transition: 0.2s; }
+    .form-control:focus, .form-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(241,90,36,0.1); }
+    .btn-primary { background: var(--accent); border: none; border-radius: 8px; color: #fff; font-weight: 600; padding: 12px; width: 100%; cursor: pointer; transition: 0.2s; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    #app-container { display: none; height: 100vh; width: 100vw; overflow: hidden; }
+    
+    .sidebar { width: var(--sidebar-width); background: var(--card); height: 100vh; border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: transform 0.3s ease; position: fixed; left: 0; top: 0; z-index: 1000; }
+    .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; justify-content: center;}
+    .sidebar-header img { height: 35px; }
+    .sidebar-header h2 { font-size: 16px; font-weight: 700; color: var(--accent); margin: 0; }
+    .sidebar-menu { list-style: none; padding: 15px 10px; margin: 0; flex-grow: 1; }
+    .sidebar-item { padding: 12px 15px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: 0.2s; display: flex; align-items: center; gap: 10px; }
+    .sidebar-item:hover { background: var(--bg); color: var(--accent); }
+    .sidebar-item.active { background: var(--accent-soft); color: var(--accent); border-right: 4px solid var(--accent); }
+    .sidebar-footer { padding: 20px; border-top: 1px solid var(--border); }
+    .btn-logout { width: 100%; background: transparent; border: 1.5px solid #fca5a5; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 600; color: var(--danger); cursor: pointer; transition: 0.2s; }
+    .btn-logout:hover { background: #fee2e2; }
+
+    .main-wrapper { flex-grow: 1; height: 100vh; overflow-y: auto; background: var(--bg); padding: 20px; margin-left: var(--sidebar-width); transition: margin-left 0.3s ease; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; background: var(--accent-dark); color: #fff; border-radius: var(--radius); padding: 15px 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+    .topbar-left { display: flex; align-items: center; gap: 15px; }
+    .toggle-btn { background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0; display: none; }
+    .topbar-name { font-weight: 600; font-size: 16px; }
+
+    #stats-wrapper { margin-bottom: 20px; }
+    .stats-bar { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+    .stat-chip { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; display: flex; align-items: center; gap: 12px; flex: 1; min-width: 180px; box-shadow: var(--shadow); border-left: 4px solid var(--accent-dark); }
+    .stat-chip.danger { border-left-color: var(--danger); }
+    .stat-chip.success { border-left-color: var(--success); }
+    .stat-chip.warning { border-left-color: var(--warning); }
+    .stat-icon { font-size: 24px; }
+    .stat-text { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+    .stat-num { font-size: 20px; font-weight: 700; color: var(--text); line-height: 1.2; margin-top: 5px; }
+    .filter-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: var(--card); border-radius: var(--radius); padding: 15px 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+
+    .tab-pane { display: none; animation: fadeIn 0.3s ease; }
+    .tab-pane.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .search-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 15px; background: var(--card); padding: 12px 15px; border-radius: 10px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+    .btn-filter, .btn-clear { border-radius: 8px; padding: 7px 16px; font-size: 13px; font-weight: 600; transition: all 0.2s ease-in-out; cursor: pointer; }
+    .btn-filter { background: var(--accent-soft); border: 1px solid var(--accent); color: var(--accent); }
+    .btn-filter:hover { background: var(--accent); color: #fff; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(241,90,36,0.25); }
+    .btn-clear { background: #f3f4f6; border: 1px solid var(--text-muted); color: var(--text-muted); }
+    .btn-clear:hover { background: var(--text-muted); color: #fff; transform: translateY(-1px); }
+
+    .table-wrap { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    .data-table th { background: #f8fafc; color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; padding: 12px 15px; text-align: center; border-bottom: 2px solid var(--border); }
+    .data-table td { padding: 12px 15px; text-align: center; vertical-align: middle; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .data-table tr:hover { background: #f9fafb; }
+    
+    .badge { padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+    .badge-ok { background: #d1fae5; color: #065f46; }
+    .badge-warn { background: #fef3c7; color: #92400e; }
+    .badge-err { background: #fee2e2; color: #991b1b; }
+
+    .grade-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 15px; box-shadow: var(--shadow); border-top: 4px solid var(--accent-dark); }
+    .grade-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .skills-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+    .skill-box { background: var(--bg); padding: 10px; border-radius: 8px; flex: 1; min-width: 80px; text-align: center; border: 1px solid var(--border); }
+    .skill-box small { color: var(--text-muted); font-size: 11px; text-transform: uppercase; }
+    .skill-box b { display: block; font-size: 15px; color: var(--accent-dark); margin-top: 4px; }
+    .nx-box { padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; border-left: 3px solid; }
+
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    @media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } }
+    .chart-box { background: var(--card); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+    .chart-title { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 15px; text-align: center; text-transform: uppercase; }
+    .chart-wrapper { position: relative; width: 100%; display: flex; justify-content: center; align-items: center; }
+    .chart-wrapper canvas { max-height: 350px !important; }
+
+    .fee-nav { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; }
+    .fee-tab { flex: 1; padding: 12px; text-align: center; font-weight: bold; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text-muted); transition: all 0.2s ease; font-size: 13px; white-space: nowrap; }
+    .fee-tab:hover { border-color: var(--accent); color: var(--accent); }
+    .fee-tab.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 10px rgba(241, 90, 36, 0.2); }
+    .fee-list-wrap { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; }
+    .fee-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); transition: 0.2s; }
+    .fee-item:hover { background: #f9fafb; }
+    .fee-item:last-child { border-bottom: none; }
+    .fee-item-left { display: flex; flex-direction: column; gap: 5px; }
+    .fee-item-title { font-weight: 700; color: var(--accent-dark); font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .fee-item-date { font-size: 12px; color: var(--text-muted); }
+    .fee-item-amount { font-weight: 700; font-size: 16px; color: var(--text); }
+    .fee-total-row { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; background: var(--accent-soft); font-weight: 700; font-size: 16px; color: var(--accent-dark); border-top: 2px solid var(--accent); }
+    
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(3px); animation: fadeIn 0.2s; }
+    .qr-card { background: var(--card); border-radius: 16px; padding: 25px; width: 90%; max-width: 350px; text-align: center; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .close-btn { position: absolute; top: 12px; right: 15px; font-size: 24px; font-weight: bold; color: var(--text-muted); cursor: pointer; border: none; background: transparent; }
+    .close-btn:hover { color: var(--danger); }
+    .qr-image-wrap { background: #fff; padding: 10px; border-radius: 12px; border: 2px dashed var(--accent); margin: 15px 0; display: inline-block; }
+    .qr-image-wrap img { max-width: 100%; height: auto; border-radius: 8px; }
+    .qr-info-box { background: var(--bg); padding: 12px; border-radius: 8px; font-size: 13px; text-align: left; }
+    .qr-info-box strong { color: var(--accent-dark); }
+
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+    
+    .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(2px); }
+    .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-wrapper { margin-left: 0; }
+      .toggle-btn { display: block; }
+      .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+      .sidebar-overlay.active { display: block; }
+      .line-wrapper canvas { height: 250px !important; max-height: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading" style="display:none">
+  <div style="text-align: center;">
+    <div class="spinner"></div>
+    <div style="font-weight:600; color:var(--text-muted);">Đang xử lý dữ liệu...</div>
+  </div>
+</div>
+
+<div id="login-section">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="logo.png" alt="PPS Logo" onerror="this.style.display='none'">
+      <div><h1>PPS Learning</h1><p>Cổng tra cứu học tập</p></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Cơ sở đào tạo</label>
+      <select id="school" class="form-select"><option value="">Đang tải...</option></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mã Học Viên</label>
+      <input type="text" id="user" class="form-control" placeholder="VD: QT001">
+    </div>
+    <div class="form-group" style="margin-bottom: 25px;">
+      <label class="form-label">Mật khẩu</label>
+      <input type="password" id="pass" class="form-control" placeholder="Nhập mật khẩu" onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="btn-primary" id="loginBtn" onclick="doLogin()">ĐĂNG NHẬP</button>
+    <div id="login-error" style="margin-top:15px; color:var(--danger); font-size:13px; text-align:center; display:none; font-weight:500;"></div>
+  </div>
+</div>
+
+<div id="app-container">
+  
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="logo.png" alt="PPS" onerror="this.style.display='none'" style="height:35px;">
+      <h2>PPS Learning</h2>
+    </div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item active" id="menu-chart" onclick="switchTab('chart')"><span>📈</span> Biểu Đồ Phân Tích</li>
+      <li class="sidebar-item" id="menu-diary" onclick="switchTab('diary')"><span>📖</span> Nhật Ký Học Tập</li>
+      <li class="sidebar-item" id="menu-grade" onclick="switchTab('grade')"><span>🏆</span> Bảng Điểm Kỳ Thi</li>
+      <li class="sidebar-item" id="menu-fee" onclick="switchTab('fee')"><span>💳</span> Thông Tin Học Phí</li>
+    </ul>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="location.reload()">Đăng xuất tài khoản</button>
+    </div>
+  </aside>
+
+  <main class="main-wrapper">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-name">👩‍🎓 Học viên: <span id="display-name" style="color:var(--accent-soft);">...</span></div>
+      </div>
+    </div>
+
+    <div id="stats-wrapper">
+      <div class="stats-bar">
+        <div class="stat-chip"><span class="stat-icon">📅</span><div><div class="stat-text">Tổng buổi học</div><div class="stat-num" id="stat-tong">0</div></div></div>
+        <div class="stat-chip danger"><span class="stat-icon">⚠️</span><div><div class="stat-text">Số buổi vắng</div><div class="stat-num" id="stat-vang">0</div></div></div>
+        <div class="stat-chip success"><span class="stat-icon">🎓</span><div><div class="stat-text">Tỉ lệ chuyên cần</div><div class="stat-num" id="stat-rate">0%</div></div></div>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-chip"><span class="stat-icon">📈</span><div><div class="stat-text">Tiến độ Bài tập</div><div class="stat-num" id="stat-tiendo">0%</div></div></div>
+        <div class="stat-chip success"><span class="stat-icon">✅</span><div><div class="stat-text">Làm đủ (≥60%)</div><div class="stat-num" id="stat-du">0</div></div></div>
+        <div class="stat-chip warning"><span class="stat-icon">📉</span><div><div class="stat-text">Làm thiếu (<60%)</div><div class="stat-num" id="stat-thieu">0</div></div></div>
+        <div class="stat-chip danger"><span class="stat-icon">❌</span><div><div class="stat-text">Không làm (0%)</div><div class="stat-num" id="stat-khonglam">0</div></div></div>
+      </div>
+    </div>
+
+    <div class="filter-bar" id="filter-wrapper">
+      <div>
+        <label class="form-label">Năm học</label>
+        <select id="f-year" class="form-select" onchange="renderAll()"></select>
+      </div>
+      <div>
+        <label class="form-label">Học kỳ</label>
+        <select id="f-hk" class="form-select" onchange="renderAll()">
+          <option value="ALL">All</option>
+          <option value="HK1">Học kỳ 1</option>
+          <option value="HK2">Học kỳ 2</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="pane-chart" class="tab-pane active">
+      <div class="chart-grid">
+        <div class="chart-box">
+          <div class="chart-title">Tỉ Lệ Chuyên Cần</div>
+          <div class="chart-wrapper"><canvas id="chartDiemDanh"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">Phong Độ Bài Tập</div>
+          <div class="chart-wrapper line-wrapper"><canvas id="chartBaiTap"></canvas></div>
+        </div>
+      </div>
+      <div class="chart-box" style="max-width: 600px; margin: 0 auto;">
+        <div class="chart-title">Trung Bình Năng Lực (Kỹ Năng)</div>
+        <div class="chart-wrapper"><canvas id="chartKyNang"></canvas></div>
+      </div>
+    </div>
+
+    <div id="pane-diary" class="tab-pane">
+      <div class="search-toolbar">
+        <label style="font-weight: 600; color: var(--text-muted); font-size: 13px; margin: 0;">📅 Lọc từ ngày:</label>
+        <input type="date" id="date-from" class="form-control" style="width: auto;">
+        <span style="font-weight: bold; color: var(--text-muted); margin: 0 5px;">đến</span>
+        <input type="date" id="date-to" class="form-control" style="width: auto;">
+        <button class="btn-filter" onclick="filterByDateRange()">Lọc</button>
+        <button class="btn-clear" onclick="clearDateFilter()">Xóa lọc</button>
+      </div>
+
+      <div class="table-wrap scroll-x">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Lớp</th><th>Ngày học</th><th>Điểm danh</th><th>Unit</th><th>Bài cũ</th>
+              <th>Thiếu bài</th><th>Bài mới</th><th>Ý thức</th><th>Nhận xét</th><th>Giáo viên</th>
+            </tr>
+          </thead>
+          <tbody id="diary-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="pane-grade" class="tab-pane">
+      <div id="grade-body"></div>
+    </div>
+
+    <div id="pane-fee" class="tab-pane">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+        <div id="fee-date-filter-wrap" class="search-toolbar" style="display: none; margin-bottom: 0;">
+          <label style="font-weight: 600; color: var(--text-muted); font-size: 13px; margin: 0;">📅 Xem sao kê từ:</label>
+          <input type="date" id="fee-date-from" class="form-control" style="width: auto;">
+          <span style="font-weight: bold; color: var(--text-muted); margin: 0 5px;">đến</span>
+          <input type="date" id="fee-date-to" class="form-control" style="width: auto;">
+          <button class="btn-filter" onclick="renderFeeList()">Lọc</button>
+          <button class="btn-clear" onclick="clearFeeFilter()">Xóa lọc</button>
+        </div>
+        <button id="btn-export-fee" class="btn-primary" style="width: auto; padding: 8px 15px; font-size: 13px; margin-left: auto;" onclick="exportFeePDF()">📥 Xuất Sao Kê</button>
+      </div>
+
+      <div class="fee-nav">
+        <div class="fee-tab active" id="fee-tab-all" onclick="setFeeTab('all')">📚 Tổng các khoản</div>
+        <div class="fee-tab" id="fee-tab-paid" onclick="setFeeTab('paid')">✅ Khoản đã nộp</div>
+        <div class="fee-tab" id="fee-tab-unpaid" onclick="setFeeTab('unpaid')">🚨 Khoản còn thiếu</div>
+      </div>
+      <div class="fee-list-wrap">
+        <div id="fee-list-container"></div>
+        <div class="fee-total-row">
+          <span>TỔNG CỘNG:</span>
+          <span id="fee-total-sum" style="font-size: 20px; color: var(--accent);">0 ₫</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="modal-overlay" id="qr-modal">
+  <div class="qr-card">
+    <button class="close-btn" onclick="closeQR()">×</button>
+    <h3 style="color: var(--accent-dark); margin-top: 0; font-size: 18px;">QUÉT MÃ THANH TOÁN</h3>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">Sử dụng App Ngân hàng bất kỳ để quét</p>
+    <div class="qr-image-wrap"><img id="qr-image" src="" alt="Mã QR Thanh Toán"></div>
+    <div class="qr-info-box">
+      <div style="margin-bottom: 5px;">Số tiền: <strong id="qr-amount" style="color: var(--danger); font-size: 16px;">0 ₫</strong></div>
+      <div>Nội dung CK: <strong id="qr-content">...</strong></div>
+    </div>
+    <p style="font-size: 12px; color: var(--success); margin-top: 15px; font-weight: bold;">✅ Hệ thống tự động điền số tiền và nội dung!</p>
+  </div>
+</div>
+
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbykr0BMRGbnd1kxMSMwJw-sONlwhg356xj5qtBERbki8s9KDLinCAFwde18zzBHDSvM/exec"; 
+  
+  let APP_STATE = { rawData: null, chartInstances: {}, currentFilteredDiary: [], currentFilteredGrades: [], currentFeeData: [], studentId: "" };
+  let currentFeeTab = 'all';
+
+  function showLoading(show) { document.getElementById("loading").style.display = show ? "flex" : "none"; }
+  function showError(msg) { const el = document.getElementById("login-error"); el.textContent = msg; el.style.display = "block"; }
+  function hideError() { document.getElementById("login-error").style.display = "none"; }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('active');
+  }
+
+  async function callApi(payload) {
+    try {
+      const res = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+      return await res.json();
+    } catch (e) { throw new Error("Mất kết nối máy chủ"); }
+  }
+
+  window.onload = async function() {
+    try {
+      const schools = await callApi({ action: "getSchoolList" });
+      const sel = document.getElementById("school");
+      sel.innerHTML = '<option value="">-- Chọn Cơ sở --</option>' + schools.map(s => `<option value="${s}">${s}</option>`).join("");
+    } catch(e) { document.getElementById("school").innerHTML = '<option>Lỗi tải danh sách</option>'; }
+  };
+
+  async function doLogin() {
+    const btn = document.getElementById("loginBtn");
+    const sch = document.getElementById("school").value;
+    const usr = document.getElementById("user").value.trim();
+    const pwd = document.getElementById("pass").value.trim();
+
+    if (!usr || !pwd || !sch) return showError("Vui lòng nhập đầy đủ thông tin!");
+    hideError(); btn.disabled = true; showLoading(true);
+
+    try {
+      const resAuth = await callApi({ action: "checkLogin", school: sch, username: usr, password: pwd });
+      if (resAuth.success) {
+        APP_STATE.studentId = resAuth.studentId; 
+        document.getElementById("display-name").textContent = resAuth.studentName;
+        const resData = await callApi({ action: "getFullData", ssId: resAuth.ssId, studentId: resAuth.studentId });
+        APP_STATE.rawData = resData.data;
+        
+        initYearFilter();
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("app-container").style.display = "flex";
+        renderAll();
+      } else { showError(resAuth.msg); }
+    } catch(e) { showError("Không thể kết nối. Vui lòng thử lại!"); }
+
+    btn.disabled = false; showLoading(false);
+  }
+
+  function initYearFilter() {
+    const d = APP_STATE.rawData;
+    const years = [...new Set([...d.diary.map(x=>x.namHoc), ...d.grades.map(x=>x.namHoc)])].filter(y=>y).sort().reverse();
+    let html = '<option value="ALL">All</option>' + years.map(y => `<option value="${y}">${y}</option>`).join("");
+    document.getElementById("f-year").innerHTML = html;
+  }
+
+  function switchTab(tabId) {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+
+    document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('menu-' + tabId).classList.add('active');
+
+    document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+    document.getElementById("pane-" + tabId).classList.add("active");
+
+    const statsWrapper = document.getElementById("stats-wrapper");
+    const filterWrapper = document.getElementById("filter-wrapper");
+    
+    if (tabId === "fee") {
+      statsWrapper.style.display = "none"; filterWrapper.style.display = "none";
+    } else if (tabId === "grade") {
+      statsWrapper.style.display = "none"; filterWrapper.style.display = "grid";
+    } else {
+      statsWrapper.style.display = "block"; filterWrapper.style.display = "grid";
+    }
+
+    if (tabId === "chart") setTimeout(() => renderCharts(APP_STATE.currentFilteredDiary, APP_STATE.currentFilteredGrades), 50);
+  }
+
+  function filterByDateRange() {
+    const fVal = document.getElementById("date-from").value; 
+    const tVal = document.getElementById("date-to").value;
+    let dFrom = fVal ? new Date(fVal) : null;
+    let dTo = tVal ? new Date(tVal) : null;
+    if (dFrom) dFrom.setHours(0,0,0,0);
+    if (dTo) dTo.setHours(23,59,59,999);
+
+    document.querySelectorAll("#diary-body tr").forEach(row => {
+      if (row.innerText.includes("Chưa có dữ liệu")) return;
+      const dateCell = row.querySelector("td:first-child");
+      if (dateCell) {
+        const parts = dateCell.textContent.trim().split("/");
+        if (parts.length === 3) {
+          const rowDate = new Date(parts[2], parts[1]-1, parts[0]);
+          let isShow = true;
+          if (dFrom && rowDate < dFrom) isShow = false;
+          if (dTo && rowDate > dTo) isShow = false;
+          row.style.display = isShow ? "" : "none";
+        }
+      }
+    });
+  }
+
+  function clearDateFilter() {
+    document.getElementById("date-from").value = ""; document.getElementById("date-to").value = "";
+    document.querySelectorAll("#diary-body tr").forEach(row => row.style.display = ""); 
+  }
+
+  function renderAll() {
+    document.getElementById("date-from").value = ""; document.getElementById("date-to").value = "";
+    const y = document.getElementById("f-year").value, hk = document.getElementById("f-hk").value;
+
+    const filDiary = APP_STATE.rawData.diary.filter(d => (y === "ALL" || d.namHoc === y) && (hk === "ALL" || d.hk === hk));
+    const filGrades = APP_STATE.rawData.grades.filter(g => (y === "ALL" || g.namHoc === y) && (hk === "ALL" || g.hk === hk));
+
+    APP_STATE.currentFilteredDiary = filDiary; APP_STATE.currentFilteredGrades = filGrades;
+
+    renderStats(filDiary); renderDiaryTable(filDiary); renderGradeCards(filGrades); renderFee(APP_STATE.rawData.hocPhi); 
+
+    if (document.getElementById("pane-chart").classList.contains("active")) {
+      setTimeout(() => renderCharts(filDiary, filGrades), 50);
+    }
+  }
+
+  function renderStats(diary) {
+    let vang = 0, giaoBT = 0, hoanThanh = 0, thieu = 0, khongLam = 0;
+    diary.forEach(d => {
+      if (d.diemDanh.includes("Vắng") || d.diemDanh.includes("phép")) vang++;
+      if (d.btCu && d.btCu !== "---") {
+        giaoBT++;
+        if (d.btCu === "Đã làm" || parseInt(d.btCu) >= 60) hoanThanh++;
+        else if (d.btCu === "Chưa làm" || d.btCu === "0%") khongLam++;
+        else thieu++;
+      }
+    });
+    const tong = diary.length;
+    document.getElementById("stat-tong").textContent = tong;
+    document.getElementById("stat-vang").textContent = vang;
+    document.getElementById("stat-rate").textContent = tong > 0 ? Math.round(((tong - vang)/tong)*100) + "%" : "0%";
+    document.getElementById("stat-tiendo").textContent = giaoBT > 0 ? Math.round((hoanThanh/giaoBT)*100) + "%" : "100%";
+    document.getElementById("stat-du").textContent = hoanThanh;
+    document.getElementById("stat-thieu").textContent = thieu;
+    document.getElementById("stat-khonglam").textContent = khongLam;
+  }
+
+  function renderDiaryTable(diary) {
+    const tbody = document.getElementById("diary-body");
+    if (!diary.length) { tbody.innerHTML = `<tr><td colspan="10" class="empty-state">Chưa có dữ liệu học tập</td></tr>`; return; }
+
+    tbody.innerHTML = diary.map(d => {
+      let ddClass = d.diemDanh.includes("Vắng") ? "badge-err" : (d.diemDanh.includes("phép") ? "badge-warn" : "badge-ok");
+      let btClass = (d.btCu==="Chưa làm" || d.btCu==="0%") ? "color:var(--danger)" : "color:var(--accent)";
+      let ytClass = (d.yThuc === "Tốt" || d.yThuc === "Khá") ? "badge-ok" : (d.yThuc === "Trung bình" ? "badge-warn" : (d.yThuc ? "badge-err" : ""));
+      let gvHTML = "---";
+      if (d.loaiGV) gvHTML = d.loaiGV.includes("Việt") ? `<span class="badge" style="background:#e0f2fe; color:#1e40af;">🇻🇳 GV Việt</span>` : `<span class="badge" style="background:#ffedd5; color:#9a3412;">🌍 GV Ngoại</span>`;
+
+      return `<tr>
+        <td style="font-weight:bold; font-size:12px;">${d.lopHoc || "---"}</td>
+        <td style="font-weight:600; color:var(--accent); white-space:nowrap;">${d.ngay}</td>        
+        <td><span class="badge ${ddClass}">${d.diemDanh}</span></td>
+        <td>${d.unit}</td>
+        <td style="font-weight:bold; ${btClass}">${d.btCu}</td>
+        <td style="color:var(--danger); font-size:12px">${d.thieuBai}</td>
+        <td>${d.btMoi}</td>
+        <td><span class="badge ${ytClass}">${d.yThuc}</span></td>
+        <td style="text-align:left; font-size:12px; color:var(--text-muted); min-width:150px;">${d.nhanXet}</td>
+        <td>${gvHTML}</td>
+      </tr>`;
+    }).join("");
+  }
+
+  function renderGradeCards(grades) {
+    const box = document.getElementById("grade-body");
+    if (!grades.length) { box.innerHTML = `<div class="empty-state">Chưa có kết quả điểm số</div>`; return; }
+
+    box.innerHTML = grades.map((g, index) => {
+      let tenLop = g.lopHoc && g.lopHoc !== "---" ? ` - Lớp ${g.lopHoc}` : "";
+
+      return `
+      <div class="grade-card">
+        <div class="grade-header">
+          <div>
+            <strong style="color:var(--accent-dark); font-size: 16px;">${g.loai}</strong> 
+            <span style="color:var(--text-muted); font-size:13px;">${tenLop}</span>
+          </div>
+          <button onclick="exportGradePDF(${index})" style="background: var(--accent-soft); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;">📥 Tải Phiếu Điểm</button>
+        </div>
+        
+        <div class="skills-grid" style="grid-template-columns: repeat(5, 1fr);">
+          <div class="skill-box"><small>Nói</small><b>${g.noi}</b></div>
+          <div class="skill-box"><small>Nghe</small><b>${g.nghe}</b></div>
+          <div class="skill-box"><small>Viết</small><b>${g.viet}</b></div>
+          <div class="skill-box"><small>Đọc</small><b>${g.doc}</b></div>
+          <div class="skill-box"><small>NP & Từ vựng</small><b>${g.nptv}</b></div>
+        </div>
+        
+        ${g.nhanXet !== '---' && g.nhanXet !== '' ? `<div class="nx-box" style="background:#f0fdfa; border-left-color:#10b981; color:#0f766e;">💬 Nhận xét: ${g.nhanXet}</div>` : ''}      
+        <div style="font-size:13px; color:var(--text-muted); margin-bottom:10px;">
+          GVVN: <b>${g.gvvn}</b> | GVNN: <b>${g.gvnn}</b>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:15px;">  
+          <div style="font-size:16px; font-weight:700; color:var(--accent)">Điểm TB: ${g.tong} &nbsp;|&nbsp; Level: ${g.xepLoai}</div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  function renderCharts(diary, grades) {
+    if (APP_STATE.chartInstances.diemDanh) APP_STATE.chartInstances.diemDanh.destroy();
+    if (APP_STATE.chartInstances.baiTap) APP_STATE.chartInstances.baiTap.destroy();
+    if (APP_STATE.chartInstances.kyNang) APP_STATE.chartInstances.kyNang.destroy();
+
+    let cm = 0, v = 0, p = 0;
+    diary.forEach(d => { if (d.diemDanh.includes("✅")) cm++; else if (d.diemDanh.includes("❌")) v++; else p++; });
+    const ctx1 = document.getElementById('chartDiemDanh').getContext('2d');
+    APP_STATE.chartInstances.diemDanh = new Chart(ctx1, { type: 'doughnut', data: { labels: ['Có mặt', 'Vắng không phép', 'Vắng có phép'], datasets: [{ data: [cm, v, p], backgroundColor: ['#0f9d58', '#d93025', '#b45309'] }] }, options: { maintainAspectRatio: false } });
+
+    let bData = [...diary].reverse();
+    let labelsBT = [], dataBT = [];
+    bData.forEach(d => {
+      if (d.btCu && d.btCu !== "---") {
+        labelsBT.push(d.ngay.slice(0, 5));
+        let num = parseInt(d.btCu);
+        dataBT.push(d.btCu === "Đã làm" ? 100 : (d.btCu === "Chưa làm" ? 0 : (isNaN(num) ? 0 : num)));
+      }
+    });
+    const ctx2 = document.getElementById('chartBaiTap').getContext('2d');
+    APP_STATE.chartInstances.baiTap = new Chart(ctx2, { type: 'line', data: { labels: labelsBT, datasets: [{ label: '% Hoàn thành', data: dataBT, borderColor: '#f15a24', backgroundColor: 'rgba(241, 90, 36, 0.1)', fill: true, tension: 0.3 }] }, options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } } });
+
+    let tb = [0, 0, 0, 0, 0];
+    let counts = [0, 0, 0, 0, 0]; 
+    const cleanScore = (val) => {
+      if (!val || val === "---") return NaN;
+      let cleanedStr = String(val).replace(/,/g, '.').replace(/[^0-9.]/g, ''); 
+      return parseFloat(cleanedStr);
+    };
+
+    grades.forEach(g => {
+      let pts = [cleanScore(g.noi), cleanScore(g.nghe), cleanScore(g.viet), cleanScore(g.doc), cleanScore(g.nptv)];
+      pts.forEach((p, i) => { if (!isNaN(p)) { tb[i] += p; counts[i]++; } });
+    });
+
+    tb = tb.map((total, i) => counts[i] > 0 ? Number((total / counts[i]).toFixed(2)) : 0);
+
+    const ctx3 = document.getElementById('chartKyNang').getContext('2d');
+    APP_STATE.chartInstances.kyNang = new Chart(ctx3, { 
+      type: 'radar', 
+      data: { labels: ['Nói', 'Nghe', 'Viết', 'Đọc', 'NP & Từ vựng'], datasets: [{ label: 'Trung bình năng lực', data: tb, backgroundColor: 'rgba(13, 43, 77, 0.2)', borderColor: '#0d2b4d', pointBackgroundColor: '#f15a24' }] }, 
+      options: { maintainAspectRatio: false, scales: { r: { suggestedMin: 0, suggestedMax: 100 } } } 
+    });
+  }
+
+  function renderFee(hocPhiData) {
+    if (!hocPhiData || !hocPhiData.danhSach) APP_STATE.currentFeeData = [];
+    else APP_STATE.currentFeeData = hocPhiData.danhSach;
+    document.getElementById("fee-date-from").value = "";
+    document.getElementById("fee-date-to").value = "";
+    setFeeTab('all'); 
+  }
+
+  function setFeeTab(tab) {
+    currentFeeTab = tab;
+    const dateFilterWrap = document.getElementById("fee-date-filter-wrap");
+    const btnExportFee = document.getElementById("btn-export-fee");
+
+    if (tab === 'paid') {
+      dateFilterWrap.style.display = "flex"; 
+      btnExportFee.style.display = "none"; 
+    } else if (tab === 'unpaid') {
+      dateFilterWrap.style.display = "none"; 
+      btnExportFee.style.display = "none"; 
+      document.getElementById("fee-date-from").value = ""; 
+      document.getElementById("fee-date-to").value = "";
+    } else {
+      dateFilterWrap.style.display = "none"; 
+      btnExportFee.style.display = "block"; 
+      document.getElementById("fee-date-from").value = ""; 
+      document.getElementById("fee-date-to").value = "";
+    }
+    renderFeeList();
+  }
+
+  function clearFeeFilter() {
+    document.getElementById("fee-date-from").value = ""; document.getElementById("fee-date-to").value = "";
+    renderFeeList();
+  }
+
+  function renderFeeList() {
+    document.querySelectorAll('.fee-tab').forEach(el => el.classList.remove('active'));
+    document.getElementById('fee-tab-' + currentFeeTab).classList.add('active');
+
+    let filtered = APP_STATE.currentFeeData;
+
+    if (currentFeeTab === 'paid') {
+      filtered = filtered.filter(i => i.trangThai === 'Đã nộp đủ');
+      
+      const fVal = document.getElementById("fee-date-from").value; 
+      const tVal = document.getElementById("fee-date-to").value;
+      let dFrom = fVal ? new Date(fVal) : null;
+      let dTo = tVal ? new Date(tVal) : null;
+      if (dFrom) dFrom.setHours(0,0,0,0);
+      if (dTo) dTo.setHours(23,59,59,999);
+
+      if (dFrom || dTo) {
+        filtered = filtered.filter(item => {
+          if (!item.ngayNop) return false; 
+          const parts = item.ngayNop.trim().split("/"); 
+          if (parts.length === 3) {
+            const rowDate = new Date(parts[2], parts[1]-1, parts[0]);
+            if (dFrom && rowDate < dFrom) return false;
+            if (dTo && rowDate > dTo) return false;
+            return true;
+          }
+          return false;
+        });
+      }
+    } else if (currentFeeTab === 'unpaid') {
+      filtered = filtered.filter(i => i.trangThai === 'Chưa nộp' || i.trangThai === 'Nộp thiếu');
+    }
+
+    let sumPhaiNop = 0, sumDaNop = 0, sumConNo = 0;
+    let html = "";
+
+    if (!filtered.length) { 
+      html = `<div class="empty-state">Không có khoản phí nào trong mục này</div>`; 
+    } else {
+      filtered.forEach(item => {
+        sumPhaiNop += parseInt(item.phaiNop) || 0;
+        sumDaNop += parseInt(item.daNop) || 0;
+        sumConNo += parseInt(item.conNo) || 0;
+
+        let badge = "";
+        if (item.trangThai === 'Đã nộp đủ') badge = '<span class="badge badge-ok">Đã nộp đủ</span>';
+        else if (item.trangThai === 'Nộp thiếu') badge = '<span class="badge badge-warn">Nộp thiếu</span>';
+        else badge = '<span class="badge badge-err">Chưa nộp</span>';
+
+        let dateStr = item.ngayNop ? `Ngày nộp: ${item.ngayNop}` : (item.hanNop ? `Hạn nộp: ${item.hanNop}` : 'Đang nợ');
+        
+        let actionBtn = "";
+        if (item.conNo > 0) {
+          let safeItemName = item.tenKhoan.replace(/'/g, ""); 
+          actionBtn = `<button onclick="showQR('${item.conNo}', '${safeItemName}')" style="background:var(--accent); color:#fff; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:5px;">📷 Thanh toán QR</button>`;
+        }
+
+        html += `
+          <div class="fee-item" style="display: flex; flex-direction: column; align-items: stretch; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div class="fee-item-left">
+                <div class="fee-item-title">${item.tenKhoan} ${badge}</div>
+                <div class="fee-item-date">📅 ${dateStr}</div>
+              </div>
+              <div style="text-align: right;">
+                ${actionBtn}
+              </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; background: var(--bg); padding: 10px; border-radius: 8px; font-size: 13px;">
+              <div>
+                <div style="color: var(--text-muted);">Phải nộp: <b style="color: var(--text);">${Number(item.phaiNop).toLocaleString('vi-VN')} ₫</b></div>
+                <div style="color: var(--text-muted);">Đã nộp: <b style="color: var(--success);">${Number(item.daNop).toLocaleString('vi-VN')} ₫</b></div>
+              </div>
+              <div style="text-align: right;">
+                <div style="color: var(--text-muted);">Còn thiếu:</div>
+                <div style="color: var(--danger); font-size: 16px; font-weight: bold;">${Number(item.conNo).toLocaleString('vi-VN')} ₫</div>
+              </div>
+            </div>
+          </div>`;
+      });
+    }
+
+    document.getElementById('fee-list-container').innerHTML = html;
+    
+    let sumLabel = "TỔNG CỘNG:";
+    let sumValue = 0;
+    
+    if (currentFeeTab === 'paid') {
+      sumLabel = "TỔNG ĐÃ NỘP (SAO KÊ):";
+      sumValue = sumDaNop;
+      document.getElementById('fee-total-sum').style.color = "var(--success)";
+    } else if (currentFeeTab === 'unpaid') {
+      sumLabel = "TỔNG ĐANG NỢ:";
+      sumValue = sumConNo;
+      document.getElementById('fee-total-sum').style.color = "var(--danger)";
+    } else {
+      sumLabel = "TỔNG PHẢI NỘP (CẢ KHÓA):";
+      sumValue = sumPhaiNop;
+      document.getElementById('fee-total-sum').style.color = "var(--accent)";
+    }
+
+    document.querySelector('.fee-total-row span:first-child').textContent = sumLabel;
+    document.getElementById('fee-total-sum').textContent = sumValue.toLocaleString('vi-VN') + ' ₫';
+  }
+
+  function showQR(amount, itemName) {
+    const BANK_ID = "MB"; 
+    const ACCOUNT_NO = "0962338350"; 
+    const ACCOUNT_NAME = "Nguyen Tri Trung";
+
+    let cleanItemName = itemName.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
+    cleanItemName = cleanItemName.replace(/đ/g, "d").replace(/Đ/g, "D").replace(/[^a-zA-Z0-9 ]/g, "");
+    
+    let description = `${APP_STATE.studentId} nop ${cleanItemName}`;
+    let encodedDesc = encodeURIComponent(description); 
+
+    const qrUrl = `https://img.vietqr.io/image/${BANK_ID}-${ACCOUNT_NO}-compact2.png?amount=${amount}&addInfo=${encodedDesc}&accountName=${encodeURIComponent(ACCOUNT_NAME)}`;
+
+    document.getElementById('qr-image').src = qrUrl;
+    document.getElementById('qr-amount').innerText = Number(amount).toLocaleString('vi-VN') + ' ₫';
+    document.getElementById('qr-content').innerText = description;
+    document.getElementById('qr-modal').style.display = 'flex';
+  }
+
+  function closeQR() {
+    document.getElementById('qr-modal').style.display = 'none';
+  }
+
+  function exportFeePDF() {
+    showLoading(true);
+    const tenHocVien = document.getElementById("display-name").textContent.replace('Học viên: ', '').trim();
+    
+    const feeItems = APP_STATE.currentFeeData;
+    
+    if (!feeItems || feeItems.length === 0) {
+      showLoading(false);
+      alert("Không có dữ liệu học phí để xuất!");
+      return;
+    }
+
+    let tableRows = "";
+    let totalFee = 0;
+    let totalDebt = 0;
+
+    feeItems.forEach((item, index) => {
+      let title = item.tenKhoan;
+      let dateStr = item.ngayNop ? item.ngayNop : (item.hanNop ? `Hạn: ${item.hanNop}` : "---");
+      let phaiNop = parseInt(item.phaiNop) || 0;
+      let conNo = parseInt(item.conNo) || 0;
+
+      totalFee += phaiNop;
+      totalDebt += conNo;
+
+      let feeStr = phaiNop > 0 ? phaiNop.toLocaleString('vi-VN') + " ₫" : "0 ₫";
+      let debtStr = conNo > 0 ? conNo.toLocaleString('vi-VN') + " ₫" : "0 ₫";
+      let debtColor = conNo > 0 ? "#b91c1c" : "#1f2937";
+
+      tableRows += `
+        <tr>
+          <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${index + 1}</td>
+          <td style="padding: 10px; border: 1px solid #ddd;">${title}</td>
+          <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${dateStr}</td>
+          <td style="padding: 10px; border: 1px solid #ddd; text-align: right; font-weight: bold; color: #1f2937;">${feeStr}</td>
+          <td style="padding: 10px; border: 1px solid #ddd; text-align: right; font-weight: bold; color: ${debtColor};">${debtStr}</td>
+        </tr>
+      `;
+    });
+
+    const printArea = document.createElement("div");
+    printArea.innerHTML = `
+      <div style="padding: 40px; font-family: 'Segoe UI', Arial, sans-serif; color: #333; background: #fff;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #f15a24; margin: 0; font-size: 24px;">TRUNG TÂM PPS VIETNAM</h1>
+          <h2 style="color: #0d2b4d; margin: 10px 0 5px 0;">BẢNG SAO KÊ HỌC PHÍ</h2>
+          <p style="margin: 0; font-size: 14px; color: #666;">Ngày lập: ${new Date().toLocaleDateString('vi-VN')}</p>
+        </div>
+        <p><strong>Học viên:</strong> ${tenHocVien}</p>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px;">
+          <thead>
+            <tr style="background-color: #0d2b4d; color: #fff;">
+              <th style="padding: 12px; border: 1px solid #0d2b4d;">STT</th>
+              <th style="padding: 12px; border: 1px solid #0d2b4d;">Nội dung</th>
+              <th style="padding: 12px; border: 1px solid #0d2b4d;">Ngày nộp (Hạn)</th>
+              <th style="padding: 12px; border: 1px solid #0d2b4d; text-align: right;">Tiền phải nộp</th>
+              <th style="padding: 12px; border: 1px solid #0d2b4d; text-align: right;">Tiền còn thiếu</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+            <tr style="background-color: #f8fafc;">
+              <td colspan="3" style="padding: 12px; border: 1px solid #ddd; text-align: right; font-weight: bold; font-size: 14px;">TỔNG CỘNG:</td>
+              <td style="padding: 12px; border: 1px solid #ddd; text-align: right; font-weight: bold; font-size: 16px; color: #1f2937;">${totalFee.toLocaleString('vi-VN')} ₫</td>
+              <td style="padding: 12px; border: 1px solid #ddd; text-align: right; font-weight: bold; font-size: 16px; color: #b91c1c;">${totalDebt.toLocaleString('vi-VN')} ₫</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top: 50px; text-align: right;">
+          <p style="margin: 0;"><strong>Xác nhận từ trung tâm</strong></p>
+          <p style="margin-top: 5px; color: #666;">(Hệ thống xuất tự động)</p>
+        </div>
+      </div>
+    `;
+
+    const opt = { 
+      margin: 0, 
+      filename: `Sao_Ke_Hoc_Phi_${tenHocVien}.pdf`.replace(/\s+/g, '_'), 
+      image: { type: 'jpeg', quality: 0.98 }, 
+      html2canvas: { scale: 2, useCORS: true }, 
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } 
+    };
+    html2pdf().set(opt).from(printArea).save().then(() => showLoading(false));
+  }
+
+  function exportGradePDF(index) {
+    showLoading(true);
+    try {
+      const g = APP_STATE.currentFilteredGrades[index];
+      const studentName = document.getElementById("display-name").textContent.replace('Học viên: ', '').trim();
+      const schoolName = document.getElementById("school").value; 
+      let lopHocDisplay = g.lopHoc && g.lopHoc !== "---" ? g.lopHoc : "";
+      
+      const printArea = document.createElement("div");
+      printArea.innerHTML = `
+        <div style="font-family: 'Times New Roman', Times, serif; color: #000; padding: 25px 40px; background: #fff; width: 800px; margin: 0 auto; box-sizing: border-box;">
+          <div style="text-align: center; margin-bottom: 15px;"><img src="logo2.png" style="height: 60px;" onerror="this.style.display='none'"></div>
+          <h2 style="text-align: center; font-size: 19px; font-weight: 900; text-transform: uppercase; margin-bottom: 5px;">KẾT QUẢ ${g.loai} </h2>
+          <h3 style="text-align: center; font-size: 16px; font-weight: 900; margin-top: 0;">CHƯƠNG TRÌNH BỔ TRỢ TIẾNG ANH THEO CHUẨN ĐẦU RA IELTS<br>(TIỀN IELTS)</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 15px;">
+            <tr><td style="padding: 8px 10px; width: 15%; font-weight: bold; white-space: nowrap;">SCHOOL</td><td style="padding: 8px 10px; width: 45%;">${schoolName}</td><td style="padding: 8px 10px; width: 15%; font-weight: bold; white-space: nowrap;">CLASS</td><td style="padding: 8px 10px; width: 25%; text-align: center;">${lopHocDisplay}</td></tr>
+            <tr><td style="padding: 8px 10px; font-weight: bold; white-space: nowrap;">FULL NAME</td><td style="padding: 8px 10px;" colspan="3">${studentName}</td></tr>
+          </table>
+          <p style="text-align: center; font-weight: bold; font-size: 14px; margin: 15px 0;">Trung tâm PPS Việt Nam trân trọng thông báo tới quý Phụ huynh học sinh về kết quả ${g.loai} chương trình bổ trợ tiếng Anh theo chuẩn đầu ra tiền IELTS bao gồm 4 kỹ năng.</p>
+          <div style="text-align: center; margin-top: 20px; margin-bottom: 5px;"><div style="font-weight: 900; font-size: 15px; margin-bottom: 5px;">DETAILED SCORES / ĐIỂM THÀNH PHẦN</div><div style="font-weight: 900; font-size: 15px; text-transform: uppercase;">KẾT QUẢ CHI TIẾT ${g.loai} NĂM HỌC ${g.namHoc}</div></div>
+          <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; text-align: center; font-size: 14px;">
+            <tr style="background-color: #e6e6e6; font-weight: bold;"><td style="border: 1px solid #000; padding: 8px; width: 50%;">SKILL / KỸ NĂNG</td><td style="border: 1px solid #000; padding: 8px; width: 50%;">% SCORE / ĐIỂM PHẦN TRĂM</td></tr>
+            <tr><td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Reading / Đọc</td><td style="border: 1px solid #000; padding: 8px;">${g.doc}</td></tr>
+            <tr><td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Listening / Nghe</td><td style="border: 1px solid #000; padding: 8px;">${g.nghe}</td></tr>
+            <tr><td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Speaking / Nói</td><td style="border: 1px solid #000; padding: 8px;">${g.noi}</td></tr>
+            <tr><td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Writing / Viết</td><td style="border: 1px solid #000; padding: 8px;">${g.viet}</td></tr>
+            <tr><td style="border: 1px solid #000; padding: 8px; font-weight: bold; background-color: #f9f9f9;">Overall / Điểm trung bình</td><td style="border: 1px solid #000; padding: 8px; font-weight: bold; background-color: #f9f9f9; font-size: 15px; color: #000;">${g.tong}</td></tr>
+          </table>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 15px; border: 1px solid #000; text-align: center; font-size: 14px;">
+            <tr><td style="border: 1px solid #000; padding: 8px; width: 50%; font-weight: bold;">Level / Trình độ hiện tại</td><td style="border: 1px solid #000; padding: 8px; width: 50%; font-weight: bold; font-size: 15px; color: #000;">${g.xepLoai}</td></tr>
+          </table>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 15px; border: 1px solid #000;">
+            <tr style="background-color: #d9d9d9;"><td style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center;">TEACHER'S COMMENT / NHẬN XÉT CỦA GIÁO VIÊN</td></tr>
+            <tr><td style="border: 1px solid #000; padding: 15px; min-height: 80px; vertical-align: top; text-align: left; font-size: 14px; line-height: 1.5;">${g.nhanXet && g.nhanXet !== '---' ? g.nhanXet : '<i>Không có nhận xét.</i>'}</td></tr>
+          </table>
+          <div style="margin-top: 15px; text-align: center; font-weight: bold; font-style: italic; font-size: 13px; line-height: 1.4;"><div style="margin-bottom: 5px;">Lưu ý: Kết quả bài thi của học sinh dựa trên đề thi rút gọn của kỳ thi PET For Schools</div><div>Mọi thắc mắc xin Quý PHHS vui lòng liên hệ tới hotline:</div><div>cô Bùi Thị Huyền - Quản lý điểm trường: 0988847436 (zalo/sđt)</div><div>Trân trọng!</div></div>
+        </div>`;
+
+      const opt = { margin: 0, filename: `Phieu_Diem_${g.loai}_${studentName}.pdf`.replace(/\s+/g, '_'), image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+      html2pdf().set(opt).from(printArea).save().then(() => showLoading(false)).catch(err => { console.error(err); showLoading(false); alert("❌ Lỗi xuất PDF."); });
+    } catch (e) { console.error(e); showLoading(false); alert("❌ Lỗi đọc dữ liệu."); }
+  }
+</script>
+</body>
+</html>
