@@ -172,8 +172,7 @@ export async function POST(req: NextRequest) {
 
       const qlhsId = qlhsIdFromProfile(p);
       const dateStr = (v.created_at as string).slice(0, 10);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const title = (v as any).lectures?.title ?? "Bài giảng";
+      const title = (v as { lectures?: { title?: string } }).lectures?.title ?? "Bài giảng";
 
       sessions.push({
         studentId:       qlhsId,
