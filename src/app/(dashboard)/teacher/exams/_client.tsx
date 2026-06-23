@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Plus, BookOpen, Headphones, Clock, Users, Eye, EyeOff, ChevronRight } from "lucide-react";
+import { Plus, BookOpen, Headphones, Clock, Users, Eye, EyeOff, ChevronRight, FileUp } from "lucide-react";
 
 interface Exam {
   id: string;
@@ -59,6 +59,10 @@ export function TeacherExamsClient() {
             <h1 className="text-2xl font-bold text-gray-900">Quản lý đề thi</h1>
             <p className="text-gray-500 text-sm mt-1">Tạo và quản lý các bộ đề luyện thi cho học sinh</p>
           </div>
+          <Link href="/teacher/exams/import"
+            className="flex items-center gap-2 border border-[#6b38d4] text-[#6b38d4] px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#6b38d4]/5 transition-colors">
+            <FileUp size={16} /> Import PDF
+          </Link>
           <Link href="/teacher/exams/new"
             className="flex items-center gap-2 bg-[#6b38d4] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity">
             <Plus size={16} /> Tạo đề mới
