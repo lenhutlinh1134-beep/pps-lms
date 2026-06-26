@@ -43,9 +43,9 @@ export async function POST(req: Request) {
     const adminSupabase = getAdminSupabase();
 
     const { data: classData, error: classError } = await adminSupabase
-      .from("classes")
-      .select("id")
-      .eq("id", classId)
+      .from("class_teachers")
+      .select("class_id")
+      .eq("class_id", classId)
       .eq("teacher_id", teacher.id)
       .single();
 
