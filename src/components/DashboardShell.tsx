@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   GraduationCap, LogOut, Home, Headphones, BookOpen, ListChecks,
@@ -96,6 +96,30 @@ export function DashboardShell({
   const router = useRouter();
   const items = NAV[role];
 
+  const [classNames, setClassNames] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (role === "student") {
+      const fetchClasses = async () => {
+        try {
+          const supabase = createClient();
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data } = await supabase
+              .from("class_students")
+              .select("class:classes(name)")
+              .eq("student_id", user.id);
+            if (data && data.length > 0) {
+              const names = data.map((d: any) => d.class?.name).filter(Boolean).join(", ");
+              if (names) setClassNames(names);
+            }
+          }
+        } catch { /* ignore */ }
+      };
+      fetchClasses();
+    }
+  }, [role]);
+
   async function handleLogout() {
     // Xoá cookie cửa sau demo (nếu có)
     document.cookie = "pps_demo_role=; path=/; max-age=0; samesite=lax";
@@ -172,7 +196,9 @@ export function DashboardShell({
           >
             <div className="text-right">
               <p className="text-body-md font-semibold leading-tight">{userName}</p>
-              <p className="text-label-sm text-on-surface-variant">{ROLE_LABEL[role]}</p>
+              <p className="text-label-sm text-on-surface-variant">
+                {classNames ? `Lớp ${classNames}` : ROLE_LABEL[role]}
+              </p>
             </div>
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-fixed font-display text-body-md font-bold text-on-primary-fixed">
               {userName.charAt(0).toUpperCase()}
