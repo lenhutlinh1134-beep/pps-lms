@@ -9,6 +9,8 @@ import { type LectureItem } from "@/components/lectures/LectureGrid";
 import { LectureBrowser } from "@/components/lectures/LectureBrowser";
 import { isDemoId, DEMO_LECTURES } from "@/lib/demo-data";
 
+import { getAdminSupabase } from "@/lib/supabase/admin";
+
 export const dynamic = "force-dynamic";
 
 export default async function TeacherLecturesPage() {
@@ -19,8 +21,8 @@ export default async function TeacherLecturesPage() {
     lectures = DEMO_LECTURES;
   } else {
     try {
-      const supabase = await createClient();
-      const { data } = await supabase
+      const supabase = getAdminSupabase();
+      const { data, error } = await supabase
         .from("lectures")
         .select(`
           id, title, type, teacher_name, created_at,
@@ -28,7 +30,13 @@ export default async function TeacherLecturesPage() {
           lecture_views(count),
           lecture_comments(count)
         `)
+        .eq("teacher_id", profile.id)
         .order("created_at", { ascending: false });
+        
+      if (error) {
+        console.error("Lectures fetch error:", error);
+      }
+      
       lectures = ((data ?? []) as unknown[]).map((row: unknown) => {
         const r = row as Record<string, unknown>;
         return {
@@ -37,7 +45,8 @@ export default async function TeacherLecturesPage() {
           comment_count: (r.lecture_comments as Array<{ count: number }>)?.[0]?.count ?? 0,
         };
       }) as unknown as LectureItem[];
-    } catch {
+    } catch (err) {
+      console.error("Lectures catch error:", err);
       lectures = [];
     }
   }
