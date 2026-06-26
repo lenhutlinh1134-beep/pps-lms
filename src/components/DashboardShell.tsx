@@ -30,7 +30,6 @@ const NAV: Record<Role, NavItem[]> = {
     { label: "Luyện nghe",  href: "/student/listening",    icon: Headphones },
     { label: "Bài giảng",   href: "/student/lectures",     icon: BookOpen },
     { label: "Bài tập",     href: "/student/exercises",    icon: ListChecks },
-    { label: "Lớp học",     href: "/student/courses",      icon: GraduationCap },
     { label: "Lịch học",    href: "/student/schedule",     icon: Calendar },
     { label: "Điểm danh",   href: "/student/attendance",   icon: ClipboardCheck },
     { label: "Nhắn tin",    href: "/student/chat",         icon: MessageCircle },
