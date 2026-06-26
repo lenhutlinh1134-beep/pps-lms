@@ -9,8 +9,6 @@ import { type LectureItem } from "@/components/lectures/LectureGrid";
 import { LectureBrowser } from "@/components/lectures/LectureBrowser";
 import { isDemoId, DEMO_LECTURES } from "@/lib/demo-data";
 
-import { getAdminSupabase } from "@/lib/supabase/admin";
-
 export const dynamic = "force-dynamic";
 
 export default async function TeacherLecturesPage() {
@@ -21,7 +19,7 @@ export default async function TeacherLecturesPage() {
     lectures = DEMO_LECTURES;
   } else {
     try {
-      const supabase = getAdminSupabase();
+      const supabase = await createClient();
       const { data, error } = await supabase
         .from("lectures")
         .select(`
