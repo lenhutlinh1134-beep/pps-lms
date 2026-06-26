@@ -28,7 +28,6 @@ export default async function StudentCoursesPage() {
 
   let classes: ClassRow[] = [];
   let announcements: AnnouncementRow[] = [];
-  let announcements: AnnouncementRow[] = [];
   let debugError = "";
   if (profile.id.startsWith("demo-")) {
     classes = [
