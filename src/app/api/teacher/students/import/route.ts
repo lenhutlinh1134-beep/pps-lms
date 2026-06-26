@@ -43,14 +43,26 @@ export async function POST(req: Request) {
     const adminSupabase = getAdminSupabase();
 
     const { data: classData, error: classError } = await adminSupabase
-      .from("class_teachers")
-      .select("class_id")
-      .eq("class_id", classId)
-      .eq("teacher_id", teacher.id)
+      .from("classes")
+      .select("id, created_by")
+      .eq("id", classId)
       .single();
 
     if (classError || !classData) {
-      return NextResponse.json({ error: "Lớp học không tồn tại hoặc bạn không có quyền." }, { status: 403 });
+      return NextResponse.json({ error: "Lớp học không tồn tại." }, { status: 404 });
+    }
+
+    if (classData.created_by !== teacher.id) {
+      const { data: ctData } = await adminSupabase
+        .from("class_teachers")
+        .select("class_id")
+        .eq("class_id", classId)
+        .eq("teacher_id", teacher.id)
+        .single();
+        
+      if (!ctData) {
+        return NextResponse.json({ error: "Bạn không có quyền quản lý lớp học này." }, { status: 403 });
+      }
     }
 
     const results = [];
