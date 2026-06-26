@@ -26,7 +26,6 @@ export default async function TeacherClassesPage() {
   const profile = await requireRole("teacher");
 
   let rows: ClassRow[] = [];
-  let debugError: string | null = null;
 
   if (isDemoId(profile.id)) {
     rows = DEMO_CLASSES.map((c) => ({
@@ -36,28 +35,20 @@ export default async function TeacherClassesPage() {
   } else {
     const supabase = await createClient();
 
-    // Thử 1: query qua class_teachers (chuẩn)
-    const { data: ctData, error: ctError } = await supabase
+    // Query chính qua class_teachers
+    const { data: ctData } = await supabase
       .from("class_teachers")
       .select("role, class:classes(id, name, year, level, created_at, school:schools(name))")
       .eq("teacher_id", profile.id);
 
-    if (ctError) {
-      debugError = `class_teachers error: ${ctError.message}`;
-    }
-
     rows = (ctData as unknown as ClassRow[]) ?? [];
 
-    // Thử 2: nếu class_teachers rỗng, fallback qua classes.created_by
+    // Fallback: nếu class_teachers rỗng, lấy theo classes.created_by
     if (rows.length === 0) {
-      const { data: ownedData, error: ownedError } = await supabase
+      const { data: ownedData } = await supabase
         .from("classes")
         .select("id, name, year, level, created_at, school:schools(name)")
         .eq("created_by", profile.id);
-
-      if (ownedError) {
-        debugError = (debugError ?? "") + ` | classes.created_by error: ${ownedError.message}`;
-      }
 
       if (ownedData && ownedData.length > 0) {
         rows = (ownedData as unknown as Array<{ id: string; name: string; year: string|null; level: string|null; created_at: string; school: { name: string }|null }>).map((c) => ({
@@ -85,19 +76,6 @@ export default async function TeacherClassesPage() {
             <Button><Plus size={20} /> Tạo lớp mới</Button>
           </Link>
         </div>
-
-        {/* DEBUG: hiển thị lỗi nếu có — XÓA sau khi fix xong */}
-        {debugError && (
-          <div className="rounded-lg bg-error-container px-4 py-3 text-body-md text-on-error-container">
-            <strong>Debug:</strong> {debugError}
-            <br /><span className="text-label-sm">profile.id = {profile.id}</span>
-          </div>
-        )}
-        {!debugError && classes.length === 0 && (
-          <div className="rounded-lg bg-surface-container px-4 py-3 text-label-md text-on-surface-variant">
-            Debug: Không tìm thấy lớp. profile.id = {profile.id} | Không có lỗi Supabase.
-          </div>
-        )}
 
         {classes.length === 0 ? (
           <EmptyState
