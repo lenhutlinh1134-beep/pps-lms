@@ -23,46 +23,10 @@ export default function RegisterPage() {
     fullName: "",
     email: "",
     password: "",
-    schoolId: "",
-    classId: "",
   });
-  const [schools, setSchools] = useState<Option[]>([]);
-  const [classes, setClasses] = useState<Option[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const supabase = createClient();
-        const { data } = await supabase.from("schools").select("id, name").order("name");
-        setSchools(data ?? []);
-      } catch {
-        /* empty */
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (!form.schoolId || role !== "student") {
-      setClasses([]);
-      return;
-    }
-    (async () => {
-      try {
-        const supabase = createClient();
-        const { data } = await supabase
-          .from("classes")
-          .select("id, name")
-          .eq("school_id", form.schoolId)
-          .order("name");
-        setClasses(data ?? []);
-      } catch {
-        setClasses([]);
-      }
-    })();
-  }, [form.schoolId, role]);
 
   function set<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -85,12 +49,6 @@ export default function RegisterPage() {
       }
 
       if (data.session && data.user) {
-        if (role === "student" && form.classId) {
-          await supabase.from("class_students").insert({
-            class_id: form.classId,
-            student_id: data.user.id,
-          });
-        }
         router.replace(`/${role}`);
         router.refresh();
         return;
@@ -181,35 +139,6 @@ export default function RegisterPage() {
           value={form.password}
           onChange={(e) => set("password", e.target.value)}
         />
-
-        {role === "student" && (
-          <>
-            <Select
-              label="Chọn trường"
-              name="schoolId"
-              value={form.schoolId}
-              onChange={(e) => set("schoolId", e.target.value)}
-            >
-              <option value="">— Chọn trường —</option>
-              {schools.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </Select>
-
-            <Select
-              label="Chọn lớp"
-              name="classId"
-              value={form.classId}
-              onChange={(e) => set("classId", e.target.value)}
-              disabled={!form.schoolId}
-            >
-              <option value="">{form.schoolId ? "— Chọn lớp —" : "Hãy chọn trường trước"}</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </Select>
-          </>
-        )}
 
         {role === "parent" && (
           <p className="rounded-xl bg-primary-container px-4 py-3 text-body-md text-on-primary-container">
