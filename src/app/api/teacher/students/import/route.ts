@@ -64,7 +64,7 @@ export async function POST(req: Request) {
 
       // Format email to avoid collision and meet requirements
       const formattedUsername = username.toLowerCase().replace(/\s+/g, "");
-      const email = `${formattedUsername}@pps-lms.local`;
+      const email = formattedUsername.includes("@") ? formattedUsername : `${formattedUsername}@pps.vn`;
       const password = generateRandomPassword();
 
       // Try to create user

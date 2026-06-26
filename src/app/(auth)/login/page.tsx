@@ -41,7 +41,7 @@ export default function LoginPage() {
     try {
       let finalEmail = identifier;
       if (loginType === "student" && !identifier.includes("@")) {
-        finalEmail = `${identifier.trim()}@pps-lms.local`;
+        finalEmail = `${identifier.trim()}@pps.vn`;
       }
 
       const supabase = createClient();
