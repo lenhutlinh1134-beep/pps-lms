@@ -26,25 +26,50 @@ export default async function TeacherClassesPage() {
   const profile = await requireRole("teacher");
 
   let rows: ClassRow[] = [];
+  let debugError: string | null = null;
+
   if (isDemoId(profile.id)) {
     rows = DEMO_CLASSES.map((c) => ({
       role: c.role,
       class: { id: c.id, name: c.name, year: c.year, level: c.level, created_at: "", school: c.school },
     }));
   } else {
-    try {
-      const supabase = await createClient();
-      const { data } = await supabase
-        .from("class_teachers")
-        .select("role, class:classes(id, name, year, level, created_at, school:schools(name))")
-        .eq("teacher_id", profile.id);
-      rows = (data as unknown as ClassRow[]) ?? [];
-    } catch {
-      rows = [];
+    const supabase = await createClient();
+
+    // Thử 1: query qua class_teachers (chuẩn)
+    const { data: ctData, error: ctError } = await supabase
+      .from("class_teachers")
+      .select("role, class:classes(id, name, year, level, created_at, school:schools(name))")
+      .eq("teacher_id", profile.id);
+
+    if (ctError) {
+      debugError = `class_teachers error: ${ctError.message}`;
+    }
+
+    rows = (ctData as unknown as ClassRow[]) ?? [];
+
+    // Thử 2: nếu class_teachers rỗng, fallback qua classes.created_by
+    if (rows.length === 0) {
+      const { data: ownedData, error: ownedError } = await supabase
+        .from("classes")
+        .select("id, name, year, level, created_at, school:schools(name)")
+        .eq("created_by", profile.id);
+
+      if (ownedError) {
+        debugError = (debugError ?? "") + ` | classes.created_by error: ${ownedError.message}`;
+      }
+
+      if (ownedData && ownedData.length > 0) {
+        rows = (ownedData as unknown as Array<{ id: string; name: string; year: string|null; level: string|null; created_at: string; school: { name: string }|null }>).map((c) => ({
+          role: "owner",
+          class: { id: c.id, name: c.name, year: c.year, level: c.level, created_at: c.created_at, school: c.school },
+        }));
+      }
     }
   }
 
   const classes = rows.filter((r) => r.class);
+
 
   return (
     <DashboardShell role="teacher" userName={profile.full_name || "Giáo viên"}>
@@ -60,6 +85,19 @@ export default async function TeacherClassesPage() {
             <Button><Plus size={20} /> Tạo lớp mới</Button>
           </Link>
         </div>
+
+        {/* DEBUG: hiển thị lỗi nếu có — XÓA sau khi fix xong */}
+        {debugError && (
+          <div className="rounded-lg bg-error-container px-4 py-3 text-body-md text-on-error-container">
+            <strong>Debug:</strong> {debugError}
+            <br /><span className="text-label-sm">profile.id = {profile.id}</span>
+          </div>
+        )}
+        {!debugError && classes.length === 0 && (
+          <div className="rounded-lg bg-surface-container px-4 py-3 text-label-md text-on-surface-variant">
+            Debug: Không tìm thấy lớp. profile.id = {profile.id} | Không có lỗi Supabase.
+          </div>
+        )}
 
         {classes.length === 0 ? (
           <EmptyState
