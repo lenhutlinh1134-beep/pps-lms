@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     const teacher = await requireRole("teacher");
 
     const body = await req.json();
-    const { classId, students } = body;
+    const { classId, students, commonPassword } = body;
 
     if (!classId || !Array.isArray(students) || students.length === 0) {
       return NextResponse.json({ error: "Thiếu thông tin classId hoặc danh sách học sinh." }, { status: 400 });
@@ -54,6 +54,7 @@ export async function POST(req: Request) {
     }
 
     const results = [];
+    const sharedRandomPassword = generateRandomPassword();
 
     for (const student of students) {
       const { fullName, username } = student;
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
       // Format email to avoid collision and meet requirements
       const formattedUsername = username.toLowerCase().replace(/\s+/g, "");
       const email = formattedUsername.includes("@") ? formattedUsername : `${formattedUsername}@pps.vn`;
-      const password = generateRandomPassword();
+      const password = commonPassword || sharedRandomPassword;
 
       // Try to create user
       const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({

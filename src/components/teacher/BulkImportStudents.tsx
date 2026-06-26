@@ -26,6 +26,8 @@ export function BulkImportStudents({ classId, onDone }: { classId: string; onDon
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [commonPassword, setCommonPassword] = useState("");
+
   function handleTextChange(val: string) {
     setText(val);
     if (!val.trim()) {
@@ -87,7 +89,7 @@ export function BulkImportStudents({ classId, onDone }: { classId: string; onDon
       const res = await fetch("/api/teacher/students/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ classId, students: parsed }),
+        body: JSON.stringify({ classId, students: parsed, commonPassword }),
       });
 
       const data = await res.json();
@@ -176,14 +178,26 @@ export function BulkImportStudents({ classId, onDone }: { classId: string; onDon
 
           {error && <p className="text-body-sm text-error">{error}</p>}
 
-          <Button 
-            onClick={handleImport} 
-            disabled={parsed.length === 0 || loading}
-            loading={loading}
-            className="w-full sm:w-auto mt-2"
-          >
-            <Upload size={18} /> Bắt đầu tạo tài khoản
-          </Button>
+          <div className="flex flex-col gap-2 mt-2 sm:flex-row sm:items-end">
+            <div className="flex flex-col gap-1 w-full sm:w-64">
+              <label className="text-label-sm font-semibold">Mật khẩu chung cho cả lớp</label>
+              <input
+                type="text"
+                placeholder="Để trống sẽ tạo ngẫu nhiên"
+                className="rounded-lg border border-outline bg-surface px-3 py-2 text-body-md focus:border-primary focus:outline-none"
+                value={commonPassword}
+                onChange={(e) => setCommonPassword(e.target.value)}
+              />
+            </div>
+            <Button 
+              onClick={handleImport} 
+              disabled={parsed.length === 0 || loading}
+              loading={loading}
+              className="w-full sm:w-auto mt-2 sm:mt-0"
+            >
+              <Upload size={18} /> Bắt đầu tạo tài khoản
+            </Button>
+          </div>
         </>
       ) : (
         <div className="flex flex-col gap-sm">
