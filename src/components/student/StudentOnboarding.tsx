@@ -99,7 +99,7 @@ export function StudentOnboarding({ userName }: { userName: string }) {
 
       {/* Cột phải: Hình ảnh minh họa */}
       <div className="hidden w-full items-center justify-center bg-primary-fixed p-3xl md:flex md:w-[55%]">
-        <Card padding="2xl" className="w-full max-w-lg bg-surface text-center shadow-xl">
+        <Card padding="lg" className="w-full max-w-lg bg-surface text-center shadow-xl">
           <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-primary-container text-primary">
             <span className="text-[48px]">🚀</span>
           </div>

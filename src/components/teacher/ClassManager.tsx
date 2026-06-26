@@ -90,6 +90,8 @@ export function ClassManager({
   );
 }
 
+import { BulkImportStudents } from "./BulkImportStudents";
+
 /* ---------------- Tab Học sinh ---------------- */
 function StudentsTab({ classId, students, demo, onChange, onAddLocal, onRemoveLocal }: {
   classId: string; students: Student[]; demo: boolean;
@@ -138,8 +140,10 @@ function StudentsTab({ classId, students, demo, onChange, onAddLocal, onRemoveLo
 
   return (
     <div className="flex flex-col gap-md">
+      {!demo && <BulkImportStudents classId={classId} onDone={onChange} />}
+
       <Card className="flex flex-col gap-sm">
-        <h3 className="text-headline-sm">Thêm học sinh</h3>
+        <h3 className="text-headline-sm">Thêm thủ công 1 học sinh</h3>
         <p className="text-body-md text-on-surface-variant">Nhập email học sinh đã đăng ký tài khoản để thêm vào lớp.</p>
         <form onSubmit={addStudent} className="flex flex-col gap-sm sm:flex-row">
           <Input

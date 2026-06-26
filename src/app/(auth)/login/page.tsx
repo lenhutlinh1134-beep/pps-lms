@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, User, ArrowLeft, GraduationCap, Briefcase } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { demoEnabled } from "@/lib/demo";
 import { DemoEntry } from "@/components/DemoEntry";
@@ -11,14 +11,16 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 
+type LoginType = "student" | "adult" | null;
+
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [loginType, setLoginType] = useState<LoginType>(null);
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Nếu đã đăng nhập → tự redirect về dashboard đúng vai trò
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -35,29 +37,35 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
     try {
+      let finalEmail = identifier;
+      if (loginType === "student" && !identifier.includes("@")) {
+        finalEmail = `${identifier.trim()}@pps-lms.local`;
+      }
+
       const supabase = createClient();
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email: finalEmail, password });
+      
       if (signInError) {
-        setError("Email hoặc mật khẩu chưa đúng. Vui lòng thử lại.");
+        setError("Thông tin đăng nhập chưa đúng. Vui lòng thử lại.");
+        setLoading(false);
         return;
       }
-      // Điều hướng theo vai trò
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+
+      const { data: { user } } = await supabase.auth.getUser();
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", user?.id)
         .single();
+        
       const nextUrl = new URLSearchParams(window.location.search).get("next");
       const dest = nextUrl && nextUrl.startsWith("/") ? nextUrl : `/${profile?.role ?? "student"}`;
       router.replace(dest);
       router.refresh();
     } catch {
-      setError("Không kết nối được máy chủ. Kiểm tra cấu hình Supabase (xem SETUP.md).");
-    } finally {
+      setError("Không kết nối được máy chủ.");
       setLoading(false);
     }
   }
@@ -77,10 +85,10 @@ export default function LoginPage() {
       });
       if (oauthError) {
         setError(`Lỗi Google: ${oauthError.message}`);
+        setLoading(false);
       }
     } catch (err) {
       setError(`Không kết nối được: ${err instanceof Error ? err.message : String(err)}`);
-    } finally {
       setLoading(false);
     }
   }
@@ -92,61 +100,111 @@ export default function LoginPage() {
         <p className="mt-xs text-body-md text-on-surface-variant">Đăng nhập để tiếp tục học</p>
       </div>
 
-      <Button variant="ghost" fullWidth onClick={handleGoogle} type="button">
-        <GoogleIcon /> Đăng nhập bằng Google
-      </Button>
+      {loginType === null ? (
+        <div className="flex flex-col gap-md py-4">
+          <button
+            onClick={() => { setLoginType("student"); setError(null); }}
+            className="flex flex-col items-center gap-sm rounded-2xl border-2 border-primary/20 bg-primary-container/30 p-xl transition hover:border-primary hover:bg-primary-container"
+          >
+            <GraduationCap size={48} className="text-primary" />
+            <span className="text-headline-sm text-primary">Dành cho Học sinh</span>
+          </button>
 
-      <div className="flex items-center gap-sm text-label-md text-outline">
-        <span className="h-px flex-1 bg-outline-variant" /> hoặc <span className="h-px flex-1 bg-outline-variant" />
-      </div>
+          <button
+            onClick={() => { setLoginType("adult"); setError(null); }}
+            className="flex flex-col items-center gap-sm rounded-2xl border-2 border-secondary/20 bg-secondary-container/30 p-xl transition hover:border-secondary hover:bg-secondary-container"
+          >
+            <Briefcase size={48} className="text-secondary" />
+            <span className="text-headline-sm text-secondary">Phụ huynh / Giáo viên / Quản lý</span>
+          </button>
+        </div>
+      ) : (
+        <>
+          <button
+            onClick={() => setLoginType(null)}
+            className="mb-2 flex w-fit items-center gap-2 text-label-md text-on-surface-variant hover:text-primary"
+          >
+            <ArrowLeft size={16} /> Quay lại
+          </button>
 
-      <form onSubmit={handleLogin} className="flex flex-col gap-md">
-        <Input
-          label="Email"
-          name="email"
-          type="email"
-          required
-          placeholder="ban@email.com"
-          leadingIcon={<Mail size={20} />}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <Input
-          label="Mật khẩu"
-          name="password"
-          type="password"
-          required
-          placeholder="••••••••"
-          leadingIcon={<Lock size={20} />}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+          {loginType === "adult" && (
+            <>
+              <Button variant="ghost" fullWidth onClick={handleGoogle} type="button">
+                <GoogleIcon /> Đăng nhập bằng Google
+              </Button>
 
-        {error && (
-          <p className="rounded-md bg-error-container px-4 py-3 text-body-md text-on-error-container">
-            {error}
-          </p>
-        )}
+              <div className="flex items-center gap-sm text-label-md text-outline">
+                <span className="h-px flex-1 bg-outline-variant" /> hoặc <span className="h-px flex-1 bg-outline-variant" />
+              </div>
+            </>
+          )}
 
-        <Button type="submit" fullWidth loading={loading}>
-          Đăng nhập
-        </Button>
-      </form>
+          <form onSubmit={handleLogin} className="flex flex-col gap-md">
+            {loginType === "student" ? (
+              <Input
+                label="Tên đăng nhập"
+                name="username"
+                type="text"
+                required
+                placeholder="VD: hocsinh01"
+                leadingIcon={<User size={20} />}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+              />
+            ) : (
+              <Input
+                label="Email"
+                name="email"
+                type="email"
+                required
+                placeholder="ban@email.com"
+                leadingIcon={<Mail size={20} />}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+              />
+            )}
+            
+            <Input
+              label="Mật khẩu"
+              name="password"
+              type="password"
+              required
+              placeholder="••••••••"
+              leadingIcon={<Lock size={20} />}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
 
-      <div className="flex flex-col gap-xs text-center text-body-md text-on-surface-variant">
-        <p>
-          Chưa có tài khoản?{" "}
-          <Link href="/register" className="font-semibold text-primary hover:underline">
-            Đăng ký học sinh
-          </Link>
-        </p>
-        <p>
-          Là giáo viên?{" "}
-          <Link href="/register-teacher" className="font-semibold text-secondary hover:underline">
-            Đăng ký giáo viên
-          </Link>
-        </p>
-      </div>
+            {error && (
+              <p className="rounded-md bg-error-container px-4 py-3 text-body-md text-on-error-container">
+                {error}
+              </p>
+            )}
+
+            <Button type="submit" fullWidth loading={loading}>
+              Đăng nhập
+            </Button>
+          </form>
+
+          <div className="flex flex-col gap-xs text-center text-body-md text-on-surface-variant">
+            {loginType === "student" ? (
+              <p>
+                Chưa có tài khoản?{" "}
+                <Link href="/register" className="font-semibold text-primary hover:underline">
+                  Đăng ký học sinh
+                </Link>
+              </p>
+            ) : (
+              <p>
+                Là giáo viên?{" "}
+                <Link href="/register-teacher" className="font-semibold text-secondary hover:underline">
+                  Đăng ký giáo viên
+                </Link>
+              </p>
+            )}
+          </div>
+        </>
+      )}
 
       {demoEnabled && <DemoEntry />}
     </Card>
