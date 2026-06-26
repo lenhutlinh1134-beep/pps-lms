@@ -43,25 +43,42 @@ export default async function StudentCoursesPage() {
       const supabase = await createClient();
       const { data, error } = await supabase
         .from("class_students")
-        .select(`joined_at, class:classes(id, name, year, lectures(id))`)
+        .select(`joined_at, class:classes(id, name, year)`)
         .order("joined_at", { ascending: false });
 
       if (error) throw error;
 
       classes = (data ?? []).map((e) => {
-        const cls = e.class as unknown as { id: string; name: string; year: string | null; lectures: { id: string }[] };
+        const cls = e.class as unknown as { id: string; name: string; year: string | null };
         return {
           id: cls.id,
           name: cls.name,
           year: cls.year,
           joined_at: e.joined_at,
-          totalLectures: cls.lectures?.length ?? 0,
+          totalLectures: 0,
         };
       });
 
-      // Lấy thông báo mới nhất từ tất cả lớp đang học (1 query)
       if (classes.length > 0) {
         const classIds = classes.map((c) => c.id);
+
+        // Fetch lecture counts separately to avoid ambiguous relationship error
+        const { data: lecturesData } = await supabase
+          .from("lectures")
+          .select("class_id")
+          .in("class_id", classIds);
+          
+        const lectureCounts = new Map<string, number>();
+        (lecturesData ?? []).forEach(l => {
+          lectureCounts.set(l.class_id, (lectureCounts.get(l.class_id) ?? 0) + 1);
+        });
+
+        classes = classes.map(c => ({
+          ...c,
+          totalLectures: lectureCounts.get(c.id) ?? 0
+        }));
+
+        // Fetch announcements
         const { data: annData } = await supabase
           .from("class_announcements")
           .select("id, content, created_at, class:classes(name)")
