@@ -14,8 +14,11 @@ interface Option {
   name: string;
 }
 
+type Role = "student" | "parent";
+
 export default function RegisterPage() {
   const router = useRouter();
+  const [role, setRole] = useState<Role>("student");
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -29,7 +32,6 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  // Tải danh sách trường khi mở trang
   useEffect(() => {
     (async () => {
       try {
@@ -37,14 +39,13 @@ export default function RegisterPage() {
         const { data } = await supabase.from("schools").select("id, name").order("name");
         setSchools(data ?? []);
       } catch {
-        /* chưa cấu hình Supabase — để trống (empty state) */
+        /* empty */
       }
     })();
   }, []);
 
-  // Tải lớp theo trường đã chọn
   useEffect(() => {
-    if (!form.schoolId) {
+    if (!form.schoolId || role !== "student") {
       setClasses([]);
       return;
     }
@@ -61,7 +62,7 @@ export default function RegisterPage() {
         setClasses([]);
       }
     })();
-  }, [form.schoolId]);
+  }, [form.schoolId, role]);
 
   function set<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -76,26 +77,27 @@ export default function RegisterPage() {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
-        options: { data: { full_name: form.fullName, role: "student" } },
+        options: { data: { full_name: form.fullName, role } },
       });
       if (signUpError) {
         setError(signUpError.message);
         return;
       }
 
-      // Nếu có session ngay (không bật xác nhận email) -> tự ghi danh vào lớp
-      if (data.session && form.classId && data.user) {
-        await supabase.from("class_students").insert({
-          class_id: form.classId,
-          student_id: data.user.id,
-        });
-        router.replace("/student");
+      if (data.session && data.user) {
+        if (role === "student" && form.classId) {
+          await supabase.from("class_students").insert({
+            class_id: form.classId,
+            student_id: data.user.id,
+          });
+        }
+        router.replace(`/${role}`);
         router.refresh();
         return;
       }
       setDone(true);
     } catch {
-      setError("Không kết nối được máy chủ. Kiểm tra cấu hình Supabase (xem SETUP.md).");
+      setError("Không kết nối được máy chủ.");
     } finally {
       setLoading(false);
     }
@@ -109,7 +111,7 @@ export default function RegisterPage() {
         </div>
         <h1 className="text-headline-md">Kiểm tra email của bạn</h1>
         <p className="mt-sm text-body-md text-on-surface-variant">
-          Chúng tôi đã gửi link xác nhận tới <b>{form.email}</b>. Xác nhận xong, hãy đăng nhập để vào lớp.
+          Đã gửi link xác nhận tới <b>{form.email}</b>. Xác nhận xong thì đăng nhập.
         </p>
         <Link href="/login" className="mt-lg inline-block">
           <Button variant="primary">Tới trang đăng nhập</Button>
@@ -121,10 +123,31 @@ export default function RegisterPage() {
   return (
     <Card className="flex flex-col gap-md">
       <div className="text-center">
-        <h1 className="text-headline-md">Đăng ký học sinh</h1>
+        <h1 className="text-headline-md">Tạo tài khoản</h1>
         <p className="mt-xs text-body-md text-on-surface-variant">
-          Điền thông tin để bắt đầu hành trình học tiếng Anh
+          Bắt đầu hành trình học tiếng Anh cùng PPS
         </p>
+      </div>
+
+      {/* Chọn vai trò */}
+      <div className="grid grid-cols-2 gap-sm">
+        {(["student", "parent"] as Role[]).map((r) => (
+          <button
+            key={r}
+            type="button"
+            onClick={() => setRole(r)}
+            className={`rounded-xl border-2 p-4 text-center transition-all ${
+              role === r
+                ? "border-primary bg-primary-container text-on-primary-container"
+                : "border-outline-variant bg-surface text-on-surface-variant hover:border-primary/50"
+            }`}
+          >
+            <div className="text-2xl mb-1">{r === "student" ? "🎓" : "👨‍👩‍👧"}</div>
+            <div className="text-label-lg font-semibold">
+              {r === "student" ? "Học sinh" : "Phụ huynh"}
+            </div>
+          </button>
+        ))}
       </div>
 
       <form onSubmit={handleRegister} className="flex flex-col gap-md">
@@ -132,7 +155,7 @@ export default function RegisterPage() {
           label="Họ và tên"
           name="fullName"
           required
-          placeholder="Nguyễn Minh Anh"
+          placeholder={role === "student" ? "Nguyễn Minh Anh" : "Nguyễn Văn A"}
           leadingIcon={<User size={20} />}
           value={form.fullName}
           onChange={(e) => set("fullName", e.target.value)}
@@ -159,34 +182,38 @@ export default function RegisterPage() {
           onChange={(e) => set("password", e.target.value)}
         />
 
-        <Select
-          label="Chọn trường"
-          name="schoolId"
-          value={form.schoolId}
-          onChange={(e) => set("schoolId", e.target.value)}
-        >
-          <option value="">— Chọn trường —</option>
-          {schools.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </Select>
+        {role === "student" && (
+          <>
+            <Select
+              label="Chọn trường"
+              name="schoolId"
+              value={form.schoolId}
+              onChange={(e) => set("schoolId", e.target.value)}
+            >
+              <option value="">— Chọn trường —</option>
+              {schools.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </Select>
 
-        <Select
-          label="Chọn lớp"
-          name="classId"
-          value={form.classId}
-          onChange={(e) => set("classId", e.target.value)}
-          disabled={!form.schoolId}
-        >
-          <option value="">{form.schoolId ? "— Chọn lớp —" : "Hãy chọn trường trước"}</option>
-          {classes.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </Select>
+            <Select
+              label="Chọn lớp"
+              name="classId"
+              value={form.classId}
+              onChange={(e) => set("classId", e.target.value)}
+              disabled={!form.schoolId}
+            >
+              <option value="">{form.schoolId ? "— Chọn lớp —" : "Hãy chọn trường trước"}</option>
+              {classes.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </Select>
+          </>
+        )}
 
-        {schools.length === 0 && (
-          <p className="rounded-md bg-surface-container px-4 py-3 text-label-md text-on-surface-variant">
-            Chưa có trường/lớp nào — danh sách do giáo viên tạo trước. (Hoặc bạn chưa cấu hình Supabase, xem SETUP.md.)
+        {role === "parent" && (
+          <p className="rounded-xl bg-primary-container px-4 py-3 text-body-md text-on-primary-container">
+            👋 Sau khi đăng ký, vào trang phụ huynh để liên kết với tài khoản con.
           </p>
         )}
 
@@ -197,16 +224,24 @@ export default function RegisterPage() {
         )}
 
         <Button type="submit" fullWidth loading={loading}>
-          Tạo tài khoản
+          Tạo tài khoản {role === "student" ? "học sinh" : "phụ huynh"}
         </Button>
       </form>
 
-      <p className="text-center text-body-md text-on-surface-variant">
-        Đã có tài khoản?{" "}
-        <Link href="/login" className="font-semibold text-primary hover:underline">
-          Đăng nhập
-        </Link>
-      </p>
+      <div className="flex flex-col gap-xs text-center text-body-md text-on-surface-variant">
+        <p>
+          Đã có tài khoản?{" "}
+          <Link href="/login" className="font-semibold text-primary hover:underline">
+            Đăng nhập
+          </Link>
+        </p>
+        <p>
+          Là giáo viên?{" "}
+          <Link href="/register-teacher" className="font-semibold text-secondary hover:underline">
+            Đăng ký giáo viên
+          </Link>
+        </p>
+      </div>
     </Card>
   );
 }

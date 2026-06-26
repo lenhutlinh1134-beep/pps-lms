@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock } from "lucide-react";
@@ -17,6 +17,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Nếu đã đăng nhập → tự redirect về dashboard đúng vai trò
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data: profile } = await supabase
+        .from("profiles").select("role").eq("id", user.id).single();
+      const nextUrl = new URLSearchParams(window.location.search).get("next");
+      const dest = nextUrl && nextUrl.startsWith("/") ? nextUrl : `/${profile?.role ?? "student"}`;
+      router.replace(dest);
+    });
+  }, [router]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -51,18 +64,24 @@ export default function LoginPage() {
 
   async function handleGoogle() {
     setError(null);
+    setLoading(true);
     try {
       const supabase = createClient();
       const nextParam = new URLSearchParams(window.location.search).get("next");
       const callbackUrl = nextParam
         ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextParam)}`
         : `${window.location.origin}/auth/callback`;
-      await supabase.auth.signInWithOAuth({
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: callbackUrl },
       });
-    } catch {
-      setError("Đăng nhập Google chưa sẵn sàng (cần bật Google provider trong Supabase).");
+      if (oauthError) {
+        setError(`Lỗi Google: ${oauthError.message}`);
+      }
+    } catch (err) {
+      setError(`Không kết nối được: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setLoading(false);
     }
   }
 

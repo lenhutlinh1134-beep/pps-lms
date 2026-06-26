@@ -37,8 +37,7 @@ export default async function TeacherClassesPage() {
       const { data } = await supabase
         .from("class_teachers")
         .select("role, class:classes(id, name, year, level, created_at, school:schools(name))")
-        .eq("teacher_id", profile.id)
-        .order("added_at", { ascending: false });
+        .eq("teacher_id", profile.id);
       rows = (data as unknown as ClassRow[]) ?? [];
     } catch {
       rows = [];

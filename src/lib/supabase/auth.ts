@@ -23,14 +23,27 @@ export async function getCurrentProfile(): Promise<{ profile: Profile } | null> 
   } = await supabase.auth.getUser();
   if (!user) return null;
 
+  // Thử đọc từ DB
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, full_name, email, role, avatar_url")
     .eq("id", user.id)
     .single();
 
-  if (!profile) return null;
-  return { profile: profile as Profile };
+  if (profile) return { profile: profile as Profile };
+
+  // Fallback: đọc role từ JWT metadata (tránh redirect loop khi RLS block)
+  const meta = user.user_metadata ?? {};
+  const role = (meta.role as Role) || "student";
+  return {
+    profile: {
+      id: user.id,
+      full_name: (meta.full_name as string) || user.email || null,
+      email: user.email || null,
+      role,
+      avatar_url: (meta.avatar_url as string) || null,
+    },
+  };
 }
 
 /** Đường dẫn dashboard tương ứng vai trò. */

@@ -119,9 +119,6 @@ export default function HomePage() {
             <a href="#canh-bao" className="transition-colors hover:text-primary">Cảnh báo thông minh</a>
           </nav>
           <div className="flex items-center gap-sm">
-            <Link href="/test" className="hidden sm:block">
-              <Button variant="ghost" size="sm">🧪 Test Drive</Button>
-            </Link>
             <Link href="/login" className="hidden sm:block">
               <Button variant="ghost" size="sm">Đăng nhập</Button>
             </Link>
@@ -153,7 +150,7 @@ export default function HomePage() {
                 Bắt đầu học ngay <ArrowRight size={20} />
               </Button>
             </Link>
-            <Link href="/demo">
+            <Link href="/register">
               <Button variant="ghost" size="lg" fullWidth>
                 <Headphones size={18} /> Nghe thử miễn phí
               </Button>
@@ -359,9 +356,9 @@ export default function HomePage() {
                   Đăng ký miễn phí <ArrowRight size={20} />
                 </Button>
               </Link>
-              <Link href="/demo">
+              <Link href="/register">
                 <Button size="lg" className="border border-white/40 bg-white/10 text-white hover:bg-white/20">
-                  Nghe thử trước
+                  Đăng ký ngay
                 </Button>
               </Link>
             </div>

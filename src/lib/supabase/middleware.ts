@@ -41,21 +41,18 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/parent") ||
     pathname.startsWith("/manager");
 
-  // Chưa đăng nhập mà vào trang nội bộ -> đẩy về /login
-  // Ngoại lệ: demo cookie (chế độ xem thử dev) cho qua — requireRole() sẽ xử lý
+  // Chưa đăng nhập mà vào trang nội bộ -> đẩy về /login (copy cookies để session không mất)
   const hasDemoCookie = request.cookies.get("pps_demo_role")?.value;
   if (!user && isProtected && !hasDemoCookie) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
-    return NextResponse.redirect(redirectUrl);
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    const res = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((c) => {
+      res.cookies.set(c.name, c.value, { path: "/", sameSite: "lax" });
+    });
+    return res;
   }
 
-  // Đã đăng nhập mà vào lại trang login/register -> đẩy vào trang chủ
-  if (user && isAuthPage) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/";
-    return NextResponse.redirect(redirectUrl);
-  }
-
+  // Không redirect auth pages ở đây — login page tự xử lý client-side
   return supabaseResponse;
 }
