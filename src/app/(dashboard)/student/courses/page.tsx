@@ -28,8 +28,8 @@ export default async function StudentCoursesPage() {
 
   let classes: ClassRow[] = [];
   let announcements: AnnouncementRow[] = [];
-  let fetchError = false;
-
+  let announcements: AnnouncementRow[] = [];
+  let debugError = "";
   if (profile.id.startsWith("demo-")) {
     classes = [
       { id: "demo-1", name: "Lớp Demo A1 — Cơ bản", year: "2025-2026", joined_at: new Date().toISOString(), totalLectures: 5 },
@@ -80,8 +80,8 @@ export default async function StudentCoursesPage() {
           class_name: r.class?.name ?? "Lớp học",
         }));
       }
-    } catch {
-      fetchError = true;
+    } catch (err: any) {
+      debugError = err.message || JSON.stringify(err);
     }
   }
 
@@ -93,22 +93,23 @@ export default async function StudentCoursesPage() {
         <div>
           <h1 className="text-display-lg">Lớp học của tôi</h1>
           <p className="mt-xs text-body-lg text-on-surface-variant">
-            {fetchError ? "Không thể tải dữ liệu" : `${classes.length} lớp đang tham gia`}
+            {debugError ? "Không thể tải dữ liệu" : `${classes.length} lớp đang tham gia`}
           </p>
         </div>
 
         {/* Error state */}
-        {fetchError && (
-          <Card className="border border-error-container bg-error-container/20">
-            <div className="flex items-center gap-sm text-on-error-container">
-              <AlertCircle size={20} className="shrink-0" />
-              <p className="text-body-md">Không thể tải danh sách lớp. Vui lòng thử lại sau.</p>
+        {debugError && (
+          <div className="rounded-xl border border-error/50 bg-error-container/20 p-md text-error">
+            <div className="flex items-center gap-xs font-semibold">
+              <AlertCircle size={20} />
+              <p>Debug Error:</p>
             </div>
-          </Card>
+            <p className="mt-1 text-sm">{debugError}</p>
+          </div>
         )}
 
         {/* Empty state */}
-        {!fetchError && classes.length === 0 && (
+        {!debugError && classes.length === 0 && (
           <EmptyState
             icon={GraduationCap}
             title="Chưa có lớp học"
