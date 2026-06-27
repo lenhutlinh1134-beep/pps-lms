@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BookOpen, ArrowLeft, GraduationCap } from "lucide-react";
 import { requireRole } from "@/lib/supabase/auth";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardShell } from "@/components/DashboardShell";
 import { EmptyState } from "@/components/EmptyState";
@@ -43,25 +44,63 @@ export default async function StudentLecturesPage({
     if (classId) className = "Lớp Demo A1";
   } else {
     try {
-      const supabase = await createClient();
+      const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const db = hasServiceKey ? getAdminSupabase() : await createClient();
 
-      // Nếu có class_id → chỉ lấy bài giảng của lớp đó
-      let query = supabase
-        .from("lectures")
-        .select("id, title, type, teacher_name, created_at, class:classes!lectures_class_id_fkey(name)")
-        .order("created_at", { ascending: false });
-      if (classId) query = query.eq("class_id", classId);
+      // Lấy danh sách lớp học sinh đang học
+      const { data: enrollments } = await db
+        .from("class_students")
+        .select("class_id")
+        .eq("student_id", profile.id);
+      const myClassIds = (enrollments ?? []).map((e: { class_id: string }) => e.class_id);
 
-      const { data } = await query;
-      lectures = (data as unknown as LectureItem[]) ?? [];
+      if (myClassIds.length > 0) {
+        // Lấy lecture_ids được chia sẻ thêm cho các lớp của học sinh
+        const { data: shared } = await db
+          .from("lecture_classes")
+          .select("lecture_id")
+          .in("class_id", myClassIds);
+        const sharedLectureIds = (shared ?? []).map((s: { lecture_id: string }) => s.lecture_id);
 
-      const { data: views } = await supabase.from("lecture_views").select("lecture_id");
+        let query = db
+          .from("lectures")
+          .select("id, title, type, teacher_name, created_at, class:classes!lectures_class_id_fkey(name)")
+          .order("created_at", { ascending: false });
+
+        if (classId) {
+          // Xem bài giảng của 1 lớp cụ thể
+          const classSharedIds = (shared ?? [])
+            .filter((_s: { lecture_id: string }) => true)
+            .map((s: { lecture_id: string }) => s.lecture_id);
+          if (classSharedIds.length > 0) {
+            query = query.or(`class_id.eq.${classId},id.in.(${classSharedIds.join(",")})`);
+          } else {
+            query = query.eq("class_id", classId);
+          }
+        } else {
+          // Xem tất cả bài giảng của các lớp học sinh đang học
+          if (sharedLectureIds.length > 0) {
+            query = query.or(`class_id.in.(${myClassIds.join(",")}),id.in.(${sharedLectureIds.join(",")})`);
+          } else {
+            query = query.in("class_id", myClassIds);
+          }
+        }
+
+        const { data } = await query;
+        lectures = (data as unknown as LectureItem[]) ?? [];
+      }
+
+      // Bài giảng đã xem (dùng regular client để lấy đúng student_id = auth.uid())
+      const regularClient = await createClient();
+      const { data: views } = await regularClient
+        .from("lecture_views")
+        .select("lecture_id")
+        .eq("student_id", profile.id);
       watchedIds = (views ?? []).map((v: { lecture_id: string }) => v.lecture_id);
 
-      // Lấy tên lớp để hiển thị trên header
       if (classId) {
-        const { data: cls } = await supabase.from("classes").select("name").eq("id", classId).single();
-        className = cls?.name ?? null;
+        const { data: cls } = await db.from("classes").select("name").eq("id", classId).single();
+        className = (cls as { name: string } | null)?.name ?? null;
       }
     } catch {
       lectures = [];

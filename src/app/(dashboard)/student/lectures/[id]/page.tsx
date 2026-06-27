@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { requireRole } from "@/lib/supabase/auth";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardShell } from "@/components/DashboardShell";
 import { LectureView, type LectureDetail } from "@/components/lectures/LectureView";
@@ -45,13 +46,36 @@ export default async function StudentLecturePage({
     lecture = DEMO_LECTURES[id] ?? null;
   } else {
     try {
-      const supabase = await createClient();
-      const { data } = await supabase
+      const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const db = hasServiceKey ? getAdminSupabase() : await createClient();
+      const { data } = await db
         .from("lectures")
-        .select("title, description, type, content_url, teacher_name, created_at, class:classes!lectures_class_id_fkey(name)")
+        .select("title, description, type, content_url, teacher_name, created_at, class_id, class:classes!lectures_class_id_fkey(name)")
         .eq("id", id)
         .single();
-      lecture = data;
+
+      // Kiểm tra học sinh có trong lớp của bài giảng này không
+      if (data) {
+        const { data: enrolled } = await db
+          .from("class_students")
+          .select("class_id")
+          .eq("student_id", profile.id)
+          .eq("class_id", (data as { class_id: string }).class_id)
+          .maybeSingle();
+        // Cũng kiểm tra lecture_classes (bài giảng được chia sẻ thêm)
+        const { data: shared } = await db
+          .from("lecture_classes")
+          .select("class_id")
+          .eq("lecture_id", id)
+          .in("class_id",
+            ((await db.from("class_students").select("class_id").eq("student_id", profile.id)).data ?? [])
+              .map((e: { class_id: string }) => e.class_id)
+          )
+          .maybeSingle();
+        if (enrolled || shared) {
+          lecture = data;
+        }
+      }
     } catch {
       lecture = null;
     }
