@@ -29,6 +29,7 @@ export function LectureComments({ lectureId }: { lectureId: string }) {
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyBody, setReplyBody] = useState("");
   const [sending, setSending] = useState(false);
+  const [postError, setPostError] = useState<string | null>(null);
 
   async function load() {
     try {
@@ -60,6 +61,7 @@ export function LectureComments({ lectureId }: { lectureId: string }) {
   async function post(text: string, parent: string | null) {
     if (!text.trim() || !me) return;
     setSending(true);
+    setPostError(null);
     try {
       const supabase = createClient();
       const { error } = await supabase.from("lecture_comments").insert({
@@ -70,7 +72,9 @@ export function LectureComments({ lectureId }: { lectureId: string }) {
         parent_comment_id: parent,
         body: text.trim(),
       });
-      if (!error) {
+      if (error) {
+        setPostError(error.message);
+      } else {
         setBody(""); setReplyBody(""); setReplyTo(null);
         await load();
       }
@@ -98,6 +102,11 @@ export function LectureComments({ lectureId }: { lectureId: string }) {
             rows={2}
             className="w-full resize-none rounded-md border border-outline-variant bg-surface-container-low p-3 text-body-md outline-none focus:border-primary"
           />
+          {postError && (
+            <p className="rounded-md bg-error-container px-3 py-2 text-label-md text-on-error-container">
+              {postError}
+            </p>
+          )}
           <div className="flex justify-end">
             <Button size="sm" onClick={() => post(body, null)} loading={sending} disabled={!body.trim()}>
               <Send size={16} /> Gửi
