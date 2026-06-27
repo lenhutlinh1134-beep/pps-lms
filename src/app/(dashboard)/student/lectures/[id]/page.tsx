@@ -48,7 +48,7 @@ export default async function StudentLecturePage({
       const supabase = await createClient();
       const { data } = await supabase
         .from("lectures")
-        .select("title, description, type, content_url, teacher_name, created_at, class:classes(name)")
+        .select("title, description, type, content_url, teacher_name, created_at, class:classes!lectures_class_id_fkey(name)")
         .eq("id", id)
         .single();
       lecture = data;

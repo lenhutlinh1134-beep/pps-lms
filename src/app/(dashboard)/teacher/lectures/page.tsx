@@ -24,7 +24,7 @@ export default async function TeacherLecturesPage() {
         .from("lectures")
         .select(`
           id, title, type, teacher_name, created_at,
-          class:classes(name),
+          class:classes!lectures_class_id_fkey(name),
           lecture_views(count),
           lecture_comments(count)
         `)

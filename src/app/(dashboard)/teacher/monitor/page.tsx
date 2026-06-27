@@ -131,7 +131,7 @@ export default async function MonitorPage() {
 
     const { data: lectures } = await supabase
       .from("lectures")
-      .select("id, title, class:classes(name), lecture_views(count), lecture_comments(count)")
+      .select("id, title, class:classes!lectures_class_id_fkey(name), lecture_views(count), lecture_comments(count)")
       .in("class_id", classIds)
       .order("created_at", { ascending: false })
       .limit(10);

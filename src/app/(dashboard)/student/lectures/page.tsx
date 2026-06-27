@@ -48,7 +48,7 @@ export default async function StudentLecturesPage({
       // Nếu có class_id → chỉ lấy bài giảng của lớp đó
       let query = supabase
         .from("lectures")
-        .select("id, title, type, teacher_name, created_at, class:classes(name)")
+        .select("id, title, type, teacher_name, created_at, class:classes!lectures_class_id_fkey(name)")
         .order("created_at", { ascending: false });
       if (classId) query = query.eq("class_id", classId);
 

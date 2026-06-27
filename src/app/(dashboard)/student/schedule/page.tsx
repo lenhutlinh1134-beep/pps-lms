@@ -81,7 +81,7 @@ export default async function StudentSchedulePage() {
       // Bài giảng (ngày đăng)
       const { data: lectureData, error } = await supabase
         .from("lectures")
-        .select("id, title, type, created_at, class:classes(name)")
+        .select("id, title, type, created_at, class:classes!lectures_class_id_fkey(name)")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
