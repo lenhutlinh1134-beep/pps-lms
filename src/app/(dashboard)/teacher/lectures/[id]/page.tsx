@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { requireRole } from "@/lib/supabase/auth";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
   DEMO_LECTURES, DEMO_CLASSES, DEMO_MIN_WATCH_MINUTES,
@@ -45,23 +46,32 @@ export default async function TeacherLecturePage({
     minWatch = DEMO_MIN_WATCH_MINUTES;
   } else {
     try {
-      const supabase = await createClient();
-      const { data } = await supabase
+      // Dùng admin client để bypass RLS — cùng lý do với trang danh sách
+      const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const adminDb = hasServiceKey ? getAdminSupabase() : await createClient();
+
+      const { data } = await adminDb
         .from("lectures")
-        .select("title, description, type, content_url, teacher_name, created_at, class_id, min_watch_minutes, class:classes!lectures_class_id_fkey(name)")
+        .select("teacher_id, title, description, type, content_url, teacher_name, created_at, class_id, min_watch_minutes, class:classes!lectures_class_id_fkey(name)")
         .eq("id", id)
         .single();
+
+      // Kiểm tra quyền: chỉ giáo viên của bài giảng mới được xem
+      if (data && data.teacher_id !== profile.id) {
+        notFound();
+      }
+
       lecture = data;
       if (data) {
         homeClassId = data.class_id ?? null;
         minWatch = data.min_watch_minutes ?? null;
         const [statsRes, classesRes, sharedRes] = await Promise.all([
-          supabase.rpc("get_lecture_watch_stats", { p_lecture_id: id }),
-          supabase
+          adminDb.rpc("get_lecture_watch_stats", { p_lecture_id: id }),
+          adminDb
             .from("class_teachers")
             .select("class:classes(id, name)")
             .eq("teacher_id", profile.id),
-          supabase.from("lecture_classes").select("class_id").eq("lecture_id", id),
+          adminDb.from("lecture_classes").select("class_id").eq("lecture_id", id),
         ]);
         viewers = (statsRes.data ?? []) as LectureViewerRow[];
         classes = ((classesRes.data ?? []) as unknown as Array<{ class: ShareClassOption | ShareClassOption[] | null }>)

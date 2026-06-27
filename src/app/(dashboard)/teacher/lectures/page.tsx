@@ -43,7 +43,8 @@ export default async function TeacherLecturesPage() {
       }
 
       lectures = ((data ?? []) as unknown[]).map((row: unknown) => {
-        return row as LectureItem;
+        const r = row as LectureItem;
+        return { ...r, view_count: r.view_count ?? 0, comment_count: r.comment_count ?? 0 };
       });
     } catch (err) {
       console.error("Lectures catch error:", err);
