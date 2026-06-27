@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus, Video } from "lucide-react";
 import { requireRole } from "@/lib/supabase/auth";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardShell } from "@/components/DashboardShell";
 import { Button } from "@/components/ui/Button";
@@ -15,37 +16,38 @@ export default async function TeacherLecturesPage() {
   const profile = await requireRole("teacher");
 
   let lectures: LectureItem[] = [];
+  let fetchError: string | null = null;
+
   if (isDemoId(profile.id)) {
     lectures = DEMO_LECTURES;
   } else {
     try {
-      const supabase = await createClient();
+      // Ưu tiên dùng admin client để bypass RLS (tránh lỗi session server-side).
+      // Vẫn an toàn vì filter chặt bằng teacher_id = profile.id.
+      // Fallback về regular client nếu service role key chưa cấu hình.
+      const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const supabase = hasServiceKey ? getAdminSupabase() : await createClient();
+
       const { data, error } = await supabase
         .from("lectures")
         .select(`
           id, title, type, teacher_name, created_at,
-          class:classes!lectures_class_id_fkey(name),
-          lecture_views(count),
-          lecture_comments(count)
+          class:classes!lectures_class_id_fkey(name)
         `)
         .eq("teacher_id", profile.id)
         .order("created_at", { ascending: false });
-        
+
       if (error) {
         console.error("Lectures fetch error:", error);
+        fetchError = error.message;
       }
-      
+
       lectures = ((data ?? []) as unknown[]).map((row: unknown) => {
-        const r = row as Record<string, unknown>;
-        return {
-          ...r,
-          view_count: (r.lecture_views as Array<{ count: number }>)?.[0]?.count ?? 0,
-          comment_count: (r.lecture_comments as Array<{ count: number }>)?.[0]?.count ?? 0,
-        };
-      }) as unknown as LectureItem[];
+        return row as LectureItem;
+      });
     } catch (err) {
       console.error("Lectures catch error:", err);
-      lectures = [];
+      fetchError = String(err);
     }
   }
 
@@ -64,7 +66,12 @@ export default async function TeacherLecturesPage() {
           </Link>
         </div>
 
-        {lectures.length === 0 ? (
+        {fetchError ? (
+          <div className="rounded-xl bg-error-container px-6 py-4 text-on-error-container">
+            <p className="font-semibold">Lỗi tải dữ liệu</p>
+            <p className="mt-1 text-sm">{fetchError}</p>
+          </div>
+        ) : lectures.length === 0 ? (
           <EmptyState
             icon={Video}
             title="Chưa có bài giảng nào"
